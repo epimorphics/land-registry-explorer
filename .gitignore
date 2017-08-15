@@ -1,0 +1,4 @@
+bin/
+node_modules/
+routes/postcode_centroids.json
+routes/postcode_simple.json
