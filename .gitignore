@@ -2,3 +2,5 @@ bin/
 node_modules/
 routes/postcode_centroids.json
 routes/postcode_simple.json
+routes/postcode_simple_voronoi.json
+routes/clipped_postcode.json

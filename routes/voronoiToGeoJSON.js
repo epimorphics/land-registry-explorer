@@ -4,18 +4,50 @@ const fs = require('fs')
 const d3voronoi = require('d3-voronoi')
 const fc = require('./featureCollection')
 const poly = require('./polygon')
+const JSONStream = require('JSONStream');
 
-let postcodes = 'postcode_test.json'
-fs.readFile(postcodes, 'utf8', (err, data) => {
-  if ( err ) {
-    return console.error(err)
+var postcodes = {
+  "type": "FeatureCollection",
+  "features": []
+}
+
+var i = 0;
+var null_count = 0;
+
+var in_stream = JSONStream.parse(['features', true ]) //rows, ANYTHING, doc 
+
+in_stream.on('data', function(data) {
+  if(data.geometry != null) {
+    postcodes.features.push(data)
+  } else {
+    null_count = null_count + 1
   }
-  let geojson = JSON.parse(data)
+  if (i % 10000 == 0) {
+    console.log(i);
+  }
+  i = i + 1;
+});
+
+in_stream.on('end', function(data) {
+  console.log(`Done parsing!`)
+  console.log(`There were ${null_count} features without a geometry!`)
+  voronoiFromPoints()
+})
+
+in_stream.on('header', function (data) {
+  fs_write_stream.write(`{"type":"FeatureCollection","features":[\n`);
+})
+
+var fs_read_stream = fs.createReadStream('./postcode_simple.json').pipe(in_stream);
+var fs_write_stream = fs.createWriteStream('./postcode_simple_voronoi.json');
+
+function voronoiFromPoints() {
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
-  geojson.features.forEach(feature => {
+  // console.log(postcodes.features.length)
+  postcodes.features.forEach(feature => {
     let c = feature.geometry.coordinates;
     if ( c[0] < minX ) {
       minX = c[0]
@@ -32,7 +64,7 @@ fs.readFile(postcodes, 'utf8', (err, data) => {
   });
   console.log(minX, minY, maxX, maxY);
 
-  let neighborhoodPoints = geojson.features.map(feature => {
+  let neighborhoodPoints = postcodes.features.map(feature => {
     return feature.geometry.coordinates
   })
   let voronoi = d3voronoi.voronoi().extent([[minX, minY], [maxX, maxY]])
@@ -46,13 +78,12 @@ fs.readFile(postcodes, 'utf8', (err, data) => {
     p.reverse().push(p[0])
     feature.geometry.coordinates.push(p)
     fc.features.push(feature)
+    fs_write_stream.write(JSON.stringify(feature));
+    fs_write_stream.write(",\n");
   })
 
-  let out = 'postcode_test_voronoi.json'
-  fs.writeFile(out, JSON.stringify(fc, null, 2), (err) => {
-    if ( err ) {
-      return console.error(err)
-    }
-    console.log(`Finished and wrote ${out}`)
-  })
-})
+  fs_write_stream.write("]}")
+  fs_write_stream.end();
+
+  console.log("Finished writing to an output file!")
+}
