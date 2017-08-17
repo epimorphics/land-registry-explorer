@@ -1,14 +1,44 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <router-view></router-view>
+    <div>
+      <div class="postcodeInput">Postcode:</div>
+      <input class="postcodeInput" v-model="postcode" placeholder="BS20 6PT"></input>
+      <button class="postcodeInput" v-on:click="query">Submit</button>
+    </div>
+    <GoogleMap></GoogleMap>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'app',
-};
+  import GoogleMap from '@/components/GoogleMap'
+
+  export default {
+    name: 'app',
+    data () {
+      return {
+        currentViz: 'map',
+        postcode: ''
+      }
+    },
+    computed () {
+      return {
+        postcode: this.postcode
+      }
+    },
+    watch: {
+      postcode: function (newPostcode) {
+        this.postcode = newPostcode
+      }
+    },
+    components: {
+      GoogleMap
+    },
+    methods: {
+      query: function () {
+        alert(`You submited ${this.postcode}`)
+      }
+    }
+  }
 </script>
 
 <style>
@@ -19,5 +49,28 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+h1, h2 {
+  font-weight: normal;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+
+a {
+  color: #42b983;
+}
+
+.postcodeInput {
+  display: inline-block;
+  margin: 10px auto;
 }
 </style>

@@ -6,25 +6,25 @@
 export default {
   name: 'google-map',
   props: ['name'],
-  data() {
-    return { };
+  data () {
+    return { }
   },
-  mounted() {
-    const element = document.getElementById('gmap');
+  mounted () {
+    const element = document.getElementById('gmap')
     const options = {
-      zoom: 14,
-      center: new window.google.maps.LatLng(51.501527, -0.1921837),
-    };
+      zoom: 16,
+      center: new window.google.maps.LatLng(51.480238, -2.768048)
+    }
     // eslint-disable-next-line
-    const map = new window.google.maps.Map(element, options);
-  },
-};
+    const map = new window.google.maps.Map(element, options)
+  }
+}
 </script> 
 
 <style scoped>
 .google-map {
-  width: 800px;
-  height: 600px;
+  width: 450px;
+  height: 250px;
   margin: 0 auto;
   background: gray;
 }
