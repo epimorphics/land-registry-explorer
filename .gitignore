@@ -1,6 +1,24 @@
-bin/
-node_modules/
-routes/postcode_centroids.json
-routes/postcode_simple.json
-routes/postcode_simple_voronoi.json
-routes/clipped_postcode.json
+# Server
+server/bin/
+server/node_modules/
+server/routes/postcode_centroids.json
+server/routes/postcode_simple.json
+server/routes/postcode_simple_voronoi.json
+server/routes/clipped_postcode.json
+server/package-lock.json
+
+# Client 
+client/.DS_Store
+client/node_modules/
+client/dist/
+client/npm-debug.log*
+client/yarn-debug.log*
+client/yarn-error.log*
+client/package-lock.json
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
