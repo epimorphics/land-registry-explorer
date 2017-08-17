@@ -1,10 +1,10 @@
 # Server
 server/bin/
 server/node_modules/
-server/routes/postcode_centroids.json
-server/routes/postcode_simple.json
-server/routes/postcode_simple_voronoi.json
-server/routes/clipped_postcode.json
+server/data/postcode_centroids.json
+server/data/postcode_simple.json
+server/data/postcode_simple_voronoi.json
+server/data/clipped_postcode.json
 server/package-lock.json
 
 # Client 

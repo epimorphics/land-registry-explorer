@@ -1,47 +1,80 @@
-var express = require('express');
-var router = express.Router();
-var fs = require('fs');
+'use strict';
 
-var JSONStream = require('JSONStream');
-var es = require('event-stream');
+const express = require('express');
 
-var i = 0;
+const router = express.Router();
 
-var out_stream = fs.createWriteStream('./postcode_simple.json');
+const mongodb = require('mongodb');
 
-var in_stream = JSONStream.parse(['features', true ]) //rows, ANYTHING, doc 
+const mongoose = require('mongoose');
 
-in_stream.on('data', function(data) {
-  var simple = {}
-  simple.type = data.type;
-  simple.properties = { pcd: data.properties.pcd };
-  simple.geometry = data.geometry;
-  out_stream.write(JSON.stringify(simple));
-  out_stream.write(",\n");
-  if (i % 10000 == 0) {
-    console.log(i);
-  }
-  i = i + 1;
+const Schema = mongoose.Schema;
+
+mongoose.connect('mongodb://localhost:27017/local', {
+    useMongoClient: true,
 });
 
-//emits anything from _before_ the first match 
-in_stream.on('header', function (data) {
-  console.log('header:', data);
-  out_stream.write(`{"type":"FeatureCollection","features":[\n`);
-})
+const db = mongoose.connection;
 
-in_stream.on('end', function(){
-  out_stream.write("]}")
-  out_stream.end();
-  console.log("DONE!");
-})
-
-fs.createReadStream('./postcode_centroids.json')
-.pipe(in_stream);
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
+});
+
+/*
+* Returns postcodes bounded by the rectangle bounded by the two given points.
+* Data is returned as an array of GeoJSON features
+*
+* lat1 - Latitude of the top left corner
+* lon1 - Longitude of the top left corner
+* lat3 - Latitude of the bottom right corner
+* lon3 - Longitude of the bottom right corner
+*/
+router.get('/postcodes/within/:lat1/:lon1/:lat3/:lon3/', function(req, res) {
+  const lat1 = parseFloat(req.params.lat1);
+  const lon1 = parseFloat(req.params.lon1);
+  
+  const lat3 = parseFloat(req.params.lat3);
+  const lon3 = parseFloat(req.params.lon3);
+  
+  const lat2 = lat1;
+  const lon2 = lon3;
+  
+  const lat4 = lat3;
+  const lon4 = lon1;
+
+  const postcodes = db.collection('postcodes');
+  
+  postcodes.find({
+    geometry: { 
+      $geoIntersects: { 
+        $geometry: { 
+          type: "Polygon", 
+          coordinates: [ 
+            [ 
+              [ lon1, lat1 ],
+              [ lon2, lat2 ],
+              [ lon3, lat3 ],
+              [ lon4, lat4 ],
+              [ lon1, lat1 ] 
+            ]
+          ]
+        }
+      }
+    }
+  }).toArray(function (err, result) {
+    if (err) {
+      console.log(err);
+      res.send([]);
+    } else {
+      console.log('Found:', result);
+      res.status(200).send(result);
+      res.end();
+    }
+  });
+
 });
 
 module.exports = router;
