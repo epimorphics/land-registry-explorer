@@ -1,5 +1,4 @@
 # Server
-server/bin/
 server/node_modules/
 server/data/postcode_centroids.json
 server/data/postcode_simple.json
