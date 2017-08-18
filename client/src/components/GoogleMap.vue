@@ -26,15 +26,32 @@ export default {
       const topRightLng = map.getBounds().getNorthEast().lng()
       const botLeftLat = map.getBounds().getSouthWest().lat()
       const botLeftLng = map.getBounds().getSouthWest().lng()
-      console.log(topRightLat)
-      console.log(topRightLng)
-      console.log(botLeftLat)
-      console.log(botLeftLng)
-      const url = `http://localhost:6364/postcodes/within/${topRightLat}/${topRightLng}/${botLeftLat}/${botLeftLng}`
+      // console.log(topRightLat)
+      // console.log(topRightLng)
+      // console.log(botLeftLat)
+      // console.log(botLeftLng)
+      const url = `/postcodes/within/${topRightLat}/${topRightLng}/${botLeftLat}/${botLeftLng}`
+      console.log(`URL: ${url}`)
       axios.get(url).then((response) => {
-        alert(`${url}`)
+        const result = response.data
+        result.forEach((feature) => {
+          var polygonCoordinates = []
+          const inputCoordinates = feature.geometry.coordinates[0]
+          inputCoordinates.forEach((coordinate) => {
+            polygonCoordinates.push(new window.google.maps.LatLng(coordinate[1], coordinate[0]))
+          })
+          var polygon = new window.google.maps.Polygon({
+            paths: polygonCoordinates,
+            strokeColor: '#00FF00',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#00FF00',
+            fillOpacity: 0.35
+          })
+          polygon.setMap(map)
+        })
       }).catch((error) => {
-        alert(error)
+        console.log(`Error: ${error}`)
       })
     })
   }
