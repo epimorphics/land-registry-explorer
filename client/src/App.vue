@@ -25,11 +25,11 @@
         postcode: this.postcode
       }
     },
-    watch: {
-      postcode: function (newPostcode) {
-        this.postcode = newPostcode
-      }
-    },
+    // watch: {
+    //   postcode: function (newPostcode) {
+    //     this.postcode = newPostcode
+    //   }
+    // },
     components: {
       GoogleMap
     },

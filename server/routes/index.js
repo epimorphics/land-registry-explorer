@@ -74,7 +74,6 @@ router.get('/postcodes/within/:lat1/:lon1/:lat3/:lon3/', function(req, res) {
       res.end();
     }
   });
-
 });
 
 module.exports = router;

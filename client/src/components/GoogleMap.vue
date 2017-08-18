@@ -3,11 +3,15 @@
 </template>
 
 <script>
+const axios = require('axios')
+
 export default {
   name: 'google-map',
   props: ['name'],
   data () {
-    return { }
+    return {
+      polygons: []
+    }
   },
   mounted () {
     const element = document.getElementById('gmap')
@@ -17,6 +21,22 @@ export default {
     }
     // eslint-disable-next-line
     const map = new window.google.maps.Map(element, options)
+    map.addListener('idle', function () {
+      const topRightLat = map.getBounds().getNorthEast().lat()
+      const topRightLng = map.getBounds().getNorthEast().lng()
+      const botLeftLat = map.getBounds().getSouthWest().lat()
+      const botLeftLng = map.getBounds().getSouthWest().lng()
+      console.log(topRightLat)
+      console.log(topRightLng)
+      console.log(botLeftLat)
+      console.log(botLeftLng)
+      const url = `http://localhost:6364/postcodes/within/${topRightLat}/${topRightLng}/${botLeftLat}/${botLeftLng}`
+      axios.get(url).then((response) => {
+        alert(`${url}`)
+      }).catch((error) => {
+        alert(error)
+      })
+    })
   }
 }
 </script> 
