@@ -5,24 +5,29 @@
       <input class="postcodeInput" v-model="postcode" placeholder="BS20 6PT"></input>
       <button class="postcodeInput" v-on:click="query">Submit</button>
     </div>
-    <GoogleMap></GoogleMap>
+    <GoogleMap :center="center"></GoogleMap>
+    <p>{{postcode}}</p>
   </div>
 </template>
 
 <script>
   import GoogleMap from '@/components/GoogleMap'
 
+  const axios = require('axios')
+
   export default {
     name: 'app',
     data () {
       return {
         currentViz: 'map',
-        postcode: ''
+        postcode: '',
+        center: new window.google.maps.LatLng(51.480238, -2.768048)
       }
     },
     computed () {
       return {
-        postcode: this.postcode
+        postcode: this.postcode,
+        center: this.center
       }
     },
     // watch: {
@@ -35,7 +40,16 @@
     },
     methods: {
       query: function () {
-        alert(`You submited ${this.postcode}`)
+        const url = `/postcodes/center/${this.postcode}`
+        console.log(`URL: ${url}`)
+
+        axios.get(url).then((response) => {
+          const result = response.data
+          this.center = new window.google.maps.LatLng(result[1], result[0])
+          this.$emit('updateMapCenter')
+        }).catch((error) => {
+          console.log(`Error: ${error}`)
+        })
       }
     }
   }

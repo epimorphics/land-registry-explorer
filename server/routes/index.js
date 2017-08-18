@@ -76,4 +76,29 @@ router.get('/postcodes/within/:lat1/:lon1/:lat3/:lon3/', function(req, res) {
   });
 });
 
+/*
+* Returns a center point of a given postcode area
+*
+* postcode - A postcode are which center point is to be returned
+*/
+router.get('/postcodes/center/:postcode', function(req, res) {
+  const postcode = req.params.postcode;
+  
+  const postcodes = db.collection('postcodes');
+  
+  postcodes.find({
+    'properties.postcode': postcode
+  }).toArray(function (err, result) {
+    if (err) {
+      console.log(err);
+      res.send([]);
+    } else {
+      console.log('Found:', result);
+      console.log(`Centroid: ${result[0].properties.centroid}`)
+      res.status(200).send(result[0].properties.centroid);
+      res.end();
+    }
+  });
+});
+
 module.exports = router;

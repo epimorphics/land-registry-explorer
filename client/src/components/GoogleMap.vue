@@ -7,9 +7,10 @@ const axios = require('axios')
 
 export default {
   name: 'google-map',
-  props: ['name'],
+  props: ['center'],
   data () {
     return {
+      map: {},
       polygons: []
     }
   },
@@ -17,21 +18,20 @@ export default {
     const element = document.getElementById('gmap')
     const options = {
       zoom: 16,
-      center: new window.google.maps.LatLng(51.480238, -2.768048)
+      center: this.center
     }
     // eslint-disable-next-line
     const map = new window.google.maps.Map(element, options)
+    this.map = map
     map.addListener('idle', function () {
       const topRightLat = map.getBounds().getNorthEast().lat()
       const topRightLng = map.getBounds().getNorthEast().lng()
       const botLeftLat = map.getBounds().getSouthWest().lat()
       const botLeftLng = map.getBounds().getSouthWest().lng()
-      // console.log(topRightLat)
-      // console.log(topRightLng)
-      // console.log(botLeftLat)
-      // console.log(botLeftLng)
+
       const url = `/postcodes/within/${topRightLat}/${topRightLng}/${botLeftLat}/${botLeftLng}`
       console.log(`URL: ${url}`)
+
       axios.get(url).then((response) => {
         const result = response.data
         result.forEach((feature) => {
@@ -54,6 +54,12 @@ export default {
         console.log(`Error: ${error}`)
       })
     })
+  },
+  methods: {
+    updateMapCenter (newCenter) {
+      alert(`Have been told to move to ${newCenter}`)
+      this.map.panTo(newCenter)
+    }
   }
 }
 </script> 
