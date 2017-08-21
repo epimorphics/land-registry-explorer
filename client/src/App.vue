@@ -5,7 +5,7 @@
       <input class="postcodeInput" v-model="postcode" placeholder="BS20 6PT"></input>
       <button class="postcodeInput" v-on:click="query">Submit</button>
     </div>
-    <GoogleMap :center="center"></GoogleMap>
+    <GoogleMap v-ref="gmap" :center="center"></GoogleMap>
     <p>{{postcode}}</p>
   </div>
 </template>
@@ -46,7 +46,7 @@
         axios.get(url).then((response) => {
           const result = response.data
           this.center = new window.google.maps.LatLng(result[1], result[0])
-          this.$emit('updateMapCenter')
+          // this.$ref('updateMapCenter', this.center)
         }).catch((error) => {
           console.log(`Error: ${error}`)
         })

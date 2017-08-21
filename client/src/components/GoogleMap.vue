@@ -22,7 +22,6 @@ export default {
     }
     // eslint-disable-next-line
     const map = new window.google.maps.Map(element, options)
-    this.map = map
     map.addListener('idle', function () {
       const topRightLat = map.getBounds().getNorthEast().lat()
       const topRightLng = map.getBounds().getNorthEast().lng()
@@ -54,6 +53,12 @@ export default {
         console.log(`Error: ${error}`)
       })
     })
+    this.map = map
+  },
+  watch: {
+    center: function () {
+      this.map.panTo(this.center)
+    }
   },
   methods: {
     updateMapCenter (newCenter) {
