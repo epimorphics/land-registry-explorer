@@ -2,11 +2,12 @@
   <div id="app">
     <div>
       <div class="postcodeInput">Postcode:</div>
-      <input class="postcodeInput" v-model="postcode" placeholder="BS20 6PT"></input>
-      <button class="postcodeInput" v-on:click="query">Submit</button>
+      <input class="postcodeInput" v-model="selectedPostcode" placeholder="BS2 8BS"></input>
+      <button class="postcodeInput" v-on:click="updateCenter">Submit</button>
     </div>
-    <GoogleMap v-ref="gmap" :center="center"></GoogleMap>
-    <p>{{postcode}}</p>
+    <GoogleMap ref="gmap" 
+               v-on:emitVisiblePostcodes="updateVisiblePostcodes" 
+               :mapCenter="mapCenter" ></GoogleMap>
   </div>
 </template>
 
@@ -14,41 +15,68 @@
   import GoogleMap from '@/components/GoogleMap'
 
   const axios = require('axios')
+  const Promise = require('bluebird')
 
   export default {
     name: 'app',
     data () {
       return {
         currentViz: 'map',
-        postcode: '',
-        center: new window.google.maps.LatLng(51.480238, -2.768048)
+        selectedPostcode: '',
+        visiblePostcodes: [],
+        mapCenter: new window.google.maps.LatLng(51.46040383078197, -2.6015971891367826)
       }
     },
     computed () {
       return {
-        postcode: this.postcode,
-        center: this.center
+        selectedPostcode: this.selectedPostcode,
+        mapCenter: this.mapCenter
       }
     },
-    // watch: {
-    //   postcode: function (newPostcode) {
-    //     this.postcode = newPostcode
-    //   }
-    // },
     components: {
       GoogleMap
     },
     methods: {
-      query: function () {
-        const url = `/postcodes/center/${this.postcode}`
+      updateCenter: function () {
+        const url = `/postcodes/center/${this.selectedPostcode}`
         console.log(`URL: ${url}`)
 
         axios.get(url).then((response) => {
           const result = response.data
-          this.center = new window.google.maps.LatLng(result[1], result[0])
-          // this.$ref('updateMapCenter', this.center)
+          this.mapCenter = new window.google.maps.LatLng(result[1], result[0])
+          console.log(JSON.stringify(this.mapCenter))
         }).catch((error) => {
           console.log(`Error: ${error}`)
+        })
+      },
+      updateVisiblePostcodes: function (newVisiblePostcodes) {
+        this.visiblePostcodes = newVisiblePostcodes
+        this.getData()
+      },
+      getData: function () {
+        this.populateURLs()
+        Promise.map(this.visiblePostcodes, postcode => axios.get(postcode.properties.url).then((response) => {
+          var totalPaid = 0
+          const data = response.data.result.items
+          data.forEach((transaction) => {
+            totalPaid += transaction.pricePaid
+          })
+          if (totalPaid === 0) {
+            postcode.properties.averagePaid = 0
+          } else {
+            postcode.properties.averagePaid = totalPaid / data.length
+          }
+        }).catch((error) => {
+          console.log(error)
+        }), { concurrency: 10 }).then(() => {
+          this.$refs.gmap.populateData(this.visiblePostcodes)
+        })
+      },
+      populateURLs: function () {
+        this.visiblePostcodes.forEach((postcode) => {
+          var url = `http://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
+          url = url.replace(` `, `%20`)
+          postcode.properties.url = url
         })
       }
     }

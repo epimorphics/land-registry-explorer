@@ -4,25 +4,72 @@
 
 <script>
 const axios = require('axios')
+const chroma = require('chroma-js')
 
 export default {
   name: 'google-map',
-  props: ['center'],
+  props: ['mapCenter'],
   data () {
     return {
       map: {},
-      polygons: []
+      postcodes: [],
+      infoWindow: new window.google.maps.InfoWindow()
+    }
+  },
+  methods: {
+    clearShapes: function () {
+      this.map.data.forEach((feature) => {
+        this.map.data.remove(feature)
+      })
+      this.postcodes = []
+    },
+    populateData: function (updatedPostcodes) {
+      var min = Infinity
+      var max = -Infinity
+      updatedPostcodes.forEach((postcode) => {
+        if (postcode.properties.averagePaid > max) max = postcode.properties.averagePaid
+        if (postcode.properties.averagePaid < min) min = postcode.properties.averagePaid
+        this.map.data.getFeatureById(postcode.id).setProperty('averagePaid', postcode.properties.averagePaid)
+        this.map.data.getFeatureById(postcode.id).setProperty('centroid', postcode.properties.centroid)
+      })
+
+      const bezInterpolator = chroma.scale(['yellow', 'red'])
+      this.map.data.setStyle((feature) => {
+        var colorIndex = (feature.getProperty('averagePaid') - min) / (max - min)
+        var color = bezInterpolator(colorIndex)
+        return {
+          fillColor: color,
+          strokeWeight: 1
+        }
+      })
+
+      this.map.data.addListener('click', function (event) {
+        if (this.infoWindow) {
+          this.infoWindow.close()
+        }
+        const centroid = event.feature.getProperty('centroid')
+        const message = `<p><b>${event.feature.getId()}</b></p>` +
+                        `<p>Average Price Paid: £${event.feature.getProperty('averagePaid')}</p>`
+        this.infoWindow = new window.google.maps.InfoWindow({
+          content: message,
+          position: new window.google.maps.LatLng(centroid[1], centroid[0])
+        })
+        this.infoWindow.open(this.map)
+      })
     }
   },
   mounted () {
+    const mVue = this
     const element = document.getElementById('gmap')
     const options = {
-      zoom: 16,
-      center: this.center
+      zoom: 17,
+      center: this.mapCenter
     }
-    // eslint-disable-next-line
     const map = new window.google.maps.Map(element, options)
+
     map.addListener('idle', function () {
+      mVue.clearShapes()
+
       const topRightLat = map.getBounds().getNorthEast().lat()
       const topRightLng = map.getBounds().getNorthEast().lng()
       const botLeftLat = map.getBounds().getSouthWest().lat()
@@ -31,39 +78,30 @@ export default {
       const url = `/postcodes/within/${topRightLat}/${topRightLng}/${botLeftLat}/${botLeftLng}`
       console.log(`URL: ${url}`)
 
+      var newPostcodes = []
+
       axios.get(url).then((response) => {
         const result = response.data
         result.forEach((feature) => {
-          var polygonCoordinates = []
-          const inputCoordinates = feature.geometry.coordinates[0]
-          inputCoordinates.forEach((coordinate) => {
-            polygonCoordinates.push(new window.google.maps.LatLng(coordinate[1], coordinate[0]))
-          })
-          var polygon = new window.google.maps.Polygon({
-            paths: polygonCoordinates,
-            strokeColor: '#00FF00',
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: '#00FF00',
-            fillOpacity: 0.35
-          })
-          polygon.setMap(map)
+          feature.id = feature.properties.postcode
+          map.data.addGeoJson(feature)
+          newPostcodes.push(feature)
         })
       }).catch((error) => {
         console.log(`Error: ${error}`)
       })
+      mVue.postcodes = newPostcodes
     })
-    this.map = map
+    mVue.map = map
   },
   watch: {
-    center: function () {
-      this.map.panTo(this.center)
-    }
-  },
-  methods: {
-    updateMapCenter (newCenter) {
-      alert(`Have been told to move to ${newCenter}`)
-      this.map.panTo(newCenter)
+    mapCenter: function () {
+      this.map.panTo(this.mapCenter)
+    },
+    postcodes: function () {
+      if (this.postcodes.length !== 0) {
+        this.$emit('emitVisiblePostcodes', this.postcodes)
+      }
     }
   }
 }
