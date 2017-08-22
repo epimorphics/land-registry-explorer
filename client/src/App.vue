@@ -1,13 +1,19 @@
 <template>
   <div id="app">
     <div>
-      <div class="postcodeInput">Postcode:</div>
-      <input class="postcodeInput" v-model="selectedPostcode" placeholder="BS2 8BS"></input>
-      <button class="postcodeInput" v-on:click="updateCenter">Submit</button>
+      <md-input-container>
+        <label>Postcode</label>
+        <md-input v-model="selectedPostcode"></md-input>
+      </md-input-container>
     </div>
     <GoogleMap ref="gmap" 
                v-on:emitVisiblePostcodes="updateVisiblePostcodes" 
                :mapCenter="mapCenter" ></GoogleMap>
+    <md-bottom-bar @change="changeVisualization">
+      <md-bottom-bar-item md-icon-src="assets/icon-home.svg">Map</md-bottom-bar-item>
+      <md-bottom-bar-item md-icon-src="assets/icon-home.svg" md-active>Bar</md-bottom-bar-item>
+      <md-bottom-bar-item md-icon-src="assets/icon-home.svg">Pie</md-bottom-bar-item>
+    </md-bottom-bar>
   </div>
 </template>
 
@@ -78,19 +84,34 @@
           url = url.replace(` `, `%20`)
           postcode.properties.url = url
         })
+      },
+      changeVisualization: function (event) {
+        console.log(event)
+      }
+    },
+    watch: {
+      selectedPostcode: function (newPostcode) {
+        if (newPostcode.length === 7) {
+          this.updateCenter()
+        }
       }
     }
   }
 </script>
 
 <style>
+@import "../node_modules/vue-material/dist/vue-material.css";
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  margin: auto;
   margin-top: 60px;
+  width: 450px;
+  height: 380px;
+  box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.11);
 }
 
 h1, h2 {
@@ -109,6 +130,10 @@ li {
 
 a {
   color: #42b983;
+}
+
+.md-bottom-bar {
+  box-shadow: 0px 0px 0px 0px rgba(0,0,0,0);
 }
 
 .postcodeInput {
