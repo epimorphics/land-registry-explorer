@@ -38,8 +38,8 @@ in_stream.on('header', function (data) {
   fs_write_stream.write(`{"type":"FeatureCollection","features":[\n`);
 })
 
-var fs_read_stream = fs.createReadStream('./postcode_simple.json').pipe(in_stream);
-var fs_write_stream = fs.createWriteStream('./postcode_simple_voronoi.json');
+var fs_read_stream = fs.createReadStream('./postcode_test.json').pipe(in_stream);
+var fs_write_stream = fs.createWriteStream('./postcode_test_voronoi.json');
 
 function voronoiFromPoints() {
   let minX = Infinity

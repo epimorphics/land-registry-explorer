@@ -44,13 +44,15 @@
     },
     methods: {
       updateCenter: function () {
-        const url = `/postcodes/center/${this.selectedPostcode}`
-        console.log(`URL: ${url}`)
-
+        const url = `https://api.postcodes.io/postcodes/${this.selectedPostcode}`
+        console.log(`Centroid URL: ${url}`)
         axios.get(url).then((response) => {
-          const result = response.data
-          this.mapCenter = new window.google.maps.LatLng(result[1], result[0])
-          console.log(JSON.stringify(this.mapCenter))
+          const latitude = response.data.result.latitude
+          const longitude = response.data.result.longitude
+          this.mapCenter = new window.google.maps.LatLng(latitude, longitude)
+          console.log(`updateCenter: ${JSON.stringify(this.mapCenter)}`)
+        }).then(() => {
+          this.getNearbyPostcodes()
         }).catch((error) => {
           console.log(`Error: ${error}`)
         })
@@ -59,8 +61,28 @@
         this.visiblePostcodes = newVisiblePostcodes
         this.getData()
       },
+      getNearbyPostcodes: function () {
+        this.visiblePostcodes = []
+        const url = `https://api.postcodes.io/postcodes?lon=${this.mapCenter.lng()}&lat=${this.mapCenter.lat()}&radius=300&limit=99`
+        console.log(`Nearby URL: ${url}`)
+        axios.get(url).then((response) => {
+          const results = response.data.result
+          results.forEach((result) => {
+            var postcode = {}
+            postcode.id = result.postcode
+            postcode.properties = {
+              centroid: new window.google.maps.LatLng(result.latitude, result.longitude)
+            }
+            this.visiblePostcodes.push(postcode)
+          })
+          // console.log(`getNearbyPostcodes: ${JSON.stringify(this.visiblePostcodes)}`)
+        }).then(() => {
+          this.populateURLs()
+        }).catch((error) => {
+          console.log(`Error: ${error}`)
+        })
+      },
       getData: function () {
-        this.populateURLs()
         Promise.map(this.visiblePostcodes, postcode => axios.get(postcode.properties.url).then((response) => {
           var totalPaid = 0
           const data = response.data.result.items
@@ -75,7 +97,8 @@
         }).catch((error) => {
           console.log(error)
         }), { concurrency: 10 }).then(() => {
-          this.$refs.gmap.populateData(this.visiblePostcodes)
+          // console.log(`getData: ${JSON.stringify(this.visiblePostcodes)}`)
+          this.$refs.gmap.generateVoronoi(this.visiblePostcodes)
         })
       },
       populateURLs: function () {
@@ -84,6 +107,7 @@
           url = url.replace(` `, `%20`)
           postcode.properties.url = url
         })
+        this.getData()
       },
       changeVisualization: function (event) {
         console.log(event)

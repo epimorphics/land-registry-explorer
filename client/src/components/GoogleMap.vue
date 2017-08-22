@@ -23,6 +23,10 @@ export default {
       })
       this.postcodes = []
     },
+    generateVoronoi: function (postcodes) {
+      this.postcodes = postcodes
+      console.log(`GoogleMap retrieved: ${JSON.stringify(postcodes)}`)
+    },
     populateData: function (updatedPostcodes) {
       var min = Infinity
       var max = -Infinity
@@ -97,11 +101,6 @@ export default {
   watch: {
     mapCenter: function () {
       this.map.panTo(this.mapCenter)
-    },
-    postcodes: function () {
-      if (this.postcodes.length !== 0) {
-        this.$emit('emitVisiblePostcodes', this.postcodes)
-      }
     }
   }
 }
