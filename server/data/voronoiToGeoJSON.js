@@ -64,11 +64,12 @@ function voronoiFromPoints() {
   });
   console.log(minX, minY, maxX, maxY);
 
-  let neighborhoodPoints = postcodes.features.map(feature => {
+  let postcodePoints = postcodes.features.map(feature => {
     return feature.geometry.coordinates
   })
+
   let voronoi = d3voronoi.voronoi().extent([[minX, minY], [maxX, maxY]])
-  let polygons = voronoi(neighborhoodPoints).polygons()
+  let polygons = voronoi(postcodePoints).polygons()
 
   polygons.forEach(p => {
     // Create a new feature object.

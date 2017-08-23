@@ -22,6 +22,7 @@
 
   const axios = require('axios')
   const Promise = require('bluebird')
+  const turf = require('@turf/turf')
 
   export default {
     name: 'app',
@@ -68,11 +69,8 @@
         axios.get(url).then((response) => {
           const results = response.data.result
           results.forEach((result) => {
-            var postcode = {}
+            var postcode = turf.point([result.longitude, result.latitude])
             postcode.id = result.postcode
-            postcode.properties = {
-              centroid: new window.google.maps.LatLng(result.latitude, result.longitude)
-            }
             this.visiblePostcodes.push(postcode)
           })
           // console.log(`getNearbyPostcodes: ${JSON.stringify(this.visiblePostcodes)}`)
@@ -81,6 +79,14 @@
         }).catch((error) => {
           console.log(`Error: ${error}`)
         })
+      },
+      populateURLs: function () {
+        this.visiblePostcodes.forEach((postcode) => {
+          var url = `http://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
+          url = url.replace(` `, `%20`)
+          postcode.properties.url = url
+        })
+        this.getData()
       },
       getData: function () {
         Promise.map(this.visiblePostcodes, postcode => axios.get(postcode.properties.url).then((response) => {
@@ -100,14 +106,6 @@
           // console.log(`getData: ${JSON.stringify(this.visiblePostcodes)}`)
           this.$refs.gmap.generateVoronoi(this.visiblePostcodes)
         })
-      },
-      populateURLs: function () {
-        this.visiblePostcodes.forEach((postcode) => {
-          var url = `http://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
-          url = url.replace(` `, `%20`)
-          postcode.properties.url = url
-        })
-        this.getData()
       },
       changeVisualization: function (event) {
         console.log(event)
