@@ -56,7 +56,7 @@ export default {
       })
       this.clearShapes()
       this.postcodes = postcodePolygons
-      console.log(`generateVoronoi: ${JSON.stringify(this.postcodes)}`)
+      // console.log(`generateVoronoi: ${JSON.stringify(this.postcodes)}`)
       this.populateData()
     },
     populateData: function () {
@@ -122,7 +122,7 @@ export default {
 <style scoped>
 .google-map {
   width: 450px;
-  height: 250px;
+  height: 300px;
   margin: 0 auto;
   background: gray;
 }

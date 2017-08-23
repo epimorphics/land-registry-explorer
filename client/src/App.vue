@@ -2,23 +2,32 @@
   <div id="app">
     <div>
       <md-input-container>
-        <label>Postcode</label>
+          <label>Postcode</label>
         <md-input v-model="selectedPostcode"></md-input>
       </md-input-container>
     </div>
-    <GoogleMap ref="gmap" 
-               v-on:emitMapCenter="readMapCenter" 
-               :mapCenter="mapCenter" ></GoogleMap>
-    <md-bottom-bar @change="changeVisualization">
-      <md-bottom-bar-item md-icon-src="assets/icon-home.svg">Map</md-bottom-bar-item>
-      <md-bottom-bar-item md-icon-src="assets/icon-home.svg" md-active>Bar</md-bottom-bar-item>
-      <md-bottom-bar-item md-icon-src="assets/icon-home.svg">Pie</md-bottom-bar-item>
+    <div>
+      <div v-if="displayMap">
+        <GoogleMap id="gmap"
+                  ref="gmap"
+                  v-on:emitMapCenter="readMapCenter"
+                  :mapCenter="mapCenter" ></GoogleMap>
+      </div>
+      <div v-else>
+        <SparqlConsole id="console"
+                      :postcode="selectedPostcode"></SparqlConsole>
+      </div>
+    </div>
+    <md-bottom-bar @change="displayMap = !displayMap">
+      <md-bottom-bar-item md-active>Map</md-bottom-bar-item>
+      <md-bottom-bar-item>Query</md-bottom-bar-item>
     </md-bottom-bar>
   </div>
 </template>
 
 <script>
   import GoogleMap from '@/components/GoogleMap'
+  import SparqlConsole from '@/components/SparqlConsole'
 
   const axios = require('axios')
   const Promise = require('bluebird')
@@ -28,20 +37,16 @@
     name: 'app',
     data () {
       return {
-        currentViz: 'map',
+        displayMap: true,
+        displayConsole: false,
         selectedPostcode: '',
         visiblePostcodes: [],
         mapCenter: new window.google.maps.LatLng(51.46040383078197, -2.6015971891367826)
       }
     },
-    computed () {
-      return {
-        selectedPostcode: this.selectedPostcode,
-        mapCenter: this.mapCenter
-      }
-    },
     components: {
-      GoogleMap
+      GoogleMap,
+      SparqlConsole
     },
     methods: {
       updateCenter: function () {
@@ -51,16 +56,12 @@
           const latitude = response.data.result.latitude
           const longitude = response.data.result.longitude
           this.mapCenter = new window.google.maps.LatLng(latitude, longitude)
-          console.log(`updateCenter: ${JSON.stringify(this.mapCenter)}`)
+          // console.log(`updateCenter: ${JSON.stringify(this.mapCenter)}`)
         }).then(() => {
           this.getNearbyPostcodes()
         }).catch((error) => {
           console.log(`Error: ${error}`)
         })
-      },
-      updateVisiblePostcodes: function (newVisiblePostcodes) {
-        this.visiblePostcodes = newVisiblePostcodes
-        this.getData()
       },
       getNearbyPostcodes: function () {
         this.visiblePostcodes = []
@@ -113,11 +114,18 @@
         this.getNearbyPostcodes()
       },
       changeVisualization: function (event) {
-        console.log(event)
+        if (this.displayMap) {
+          this.displayMap = false
+          this.displayConsole = true
+        } else {
+          this.displayMap = true
+          this.displayConsole = false
+        }
       }
     },
     watch: {
       selectedPostcode: function (newPostcode) {
+        // console.log(`App: selectedPostcode changed to - ${this.selectedPostcode}`)
         if (newPostcode.length === 7) {
           this.updateCenter()
         }
@@ -137,7 +145,7 @@
   margin: auto;
   margin-top: 60px;
   width: 450px;
-  height: 380px;
+  height: 430px;
   box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.11);
 }
 
@@ -163,8 +171,4 @@ a {
   box-shadow: 0px 0px 0px 0px rgba(0,0,0,0);
 }
 
-.postcodeInput {
-  display: inline-block;
-  margin: 10px auto;
-}
 </style>
