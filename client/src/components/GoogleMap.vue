@@ -54,6 +54,7 @@ export default {
         })
         postcodePolygons.push(postcodePolygon)
       })
+      this.clearShapes()
       this.postcodes = postcodePolygons
       console.log(`generateVoronoi: ${JSON.stringify(this.postcodes)}`)
       this.populateData()
@@ -65,8 +66,6 @@ export default {
         this.map.data.addGeoJson(postcode)
         if (postcode.properties.averagePaid > max) max = postcode.properties.averagePaid
         if (postcode.properties.averagePaid < min) min = postcode.properties.averagePaid
-        // this.map.data.getFeatureById(postcode.id).setProperty('averagePaid', postcode.properties.averagePaid)
-        // this.map.data.getFeatureById(postcode.id).setProperty('centroid', postcode.properties.centroid)
       })
 
       const bezInterpolator = chroma.scale(['yellow', 'red'])
@@ -103,31 +102,9 @@ export default {
     }
     const map = new window.google.maps.Map(element, options)
 
-    // map.addListener('idle', function () {
-    //   mVue.clearShapes()
-
-    //   const topRightLat = map.getBounds().getNorthEast().lat()
-    //   const topRightLng = map.getBounds().getNorthEast().lng()
-    //   const botLeftLat = map.getBounds().getSouthWest().lat()
-    //   const botLeftLng = map.getBounds().getSouthWest().lng()
-
-    //   const url = `/postcodes/within/${topRightLat}/${topRightLng}/${botLeftLat}/${botLeftLng}`
-    //   console.log(`URL: ${url}`)
-
-    //   var newPostcodes = []
-
-    //   axios.get(url).then((response) => {
-    //     const result = response.data
-    //     result.forEach((feature) => {
-    //       feature.id = feature.properties.postcode
-    //       map.data.addGeoJson(feature)
-    //       newPostcodes.push(feature)
-    //     })
-    //   }).catch((error) => {
-    //     console.log(`Error: ${error}`)
-    //   })
-    //   mVue.postcodes = newPostcodes
-    // })
+    map.addListener('idle', function () {
+      mVue.$emit('emitMapCenter', map.getCenter())
+    })
     mVue.map = map
   },
   watch: {

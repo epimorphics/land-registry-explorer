@@ -7,7 +7,7 @@
       </md-input-container>
     </div>
     <GoogleMap ref="gmap" 
-               v-on:emitVisiblePostcodes="updateVisiblePostcodes" 
+               v-on:emitMapCenter="readMapCenter" 
                :mapCenter="mapCenter" ></GoogleMap>
     <md-bottom-bar @change="changeVisualization">
       <md-bottom-bar-item md-icon-src="assets/icon-home.svg">Map</md-bottom-bar-item>
@@ -106,6 +106,11 @@
           // console.log(`getData: ${JSON.stringify(this.visiblePostcodes)}`)
           this.$refs.gmap.generateVoronoi(this.visiblePostcodes)
         })
+      },
+      readMapCenter: function (newMapCenter) {
+        console.log(`App got new map center: ${newMapCenter}`)
+        this.mapCenter = newMapCenter
+        this.getNearbyPostcodes()
       },
       changeVisualization: function (event) {
         console.log(event)
