@@ -98,7 +98,11 @@ export default {
     const element = document.getElementById('gmap')
     const options = {
       zoom: 17,
-      center: this.mapCenter
+      center: this.mapCenter,
+      disableDefaultUI: true,
+      zoomControl: true,
+      minZoom: 17,
+      maxZoom: 18
     }
     const map = new window.google.maps.Map(element, options)
 
