@@ -1,24 +1,25 @@
 <template>
   <div class="sparql-console">
-    <!-- codemirror -->  
+    <!-- codemirror -->
     <codemirror id="codemirror"
                 v-model="code" 
                 :options="editorOption"
-                @cursorActivity="onEditorCursorActivity"
-                @ready="onEditorReady"
-                @focus="onEditorFocus"
-                @blur="onEditorBlur">
+                @change="onEditorChange">
     </codemirror>
+    <div>
+      <md-button id="run-query" class="md-raised" @click="runQuery">Run Query</md-button>
+    </div>
   </div>
 </template>
 
 <script>
+  const d3 = require('d3-sparql')
+
   export default {
-    props: ['postcode'],
     data () {
-      var code = `<h1> Hello From ${this.postcode}! </h1>`
       return {
-        code,
+        code: this.$store.getters.code,
+        endpoint: 'http://landregistry.data.gov.uk/landregistry/query',
         editorOption: {
           tabSize: 2,
           foldGutter: true,
@@ -34,22 +35,25 @@
       }
     },
     methods: {
-      onEditorCursorActivity (codemirror) {
-        console.log('onEditorCursorActivity', codemirror)
+      onEditorChange (code) {
+        console.log('onEditorChange')
       },
-      onEditorReady (codemirror) {
-        console.log('onEditorReady', codemirror)
-      },
-      onEditorFocus (codemirror) {
-        console.log('onEditorFocus', codemirror)
-      },
-      onEditorBlur (codemirror) {
-        console.log('onEditorBlur', codemirror)
+      runQuery () {
+        const mVue = this
+        d3.sparql(this.endpoint, this.code, function (error, data) {
+          if (error) throw error
+          mVue.$store.commit('updateQueryResult', data)
+        })
+      }
+    },
+    computed: {
+      postcode () {
+        return this.$store.state.postcode
       }
     },
     watch: {
       postcode: function () {
-        console.log(this.postcode)
+        this.code = this.$store.getters.code
       }
     }
   }
@@ -58,7 +62,12 @@
 <style scoped>
 .sparql-console {
   width: 450px;
-  height: 300px;
-  text-align: left; 
+  height: 350px;
+  text-align: left;
+}
+
+#run-query {
+  background-color: #4CAF50;
+  float: right;
 }
 </style>

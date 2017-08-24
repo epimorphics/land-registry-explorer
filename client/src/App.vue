@@ -7,20 +7,23 @@
       </md-input-container>
     </div>
     <div>
-      <div v-if="displayMap">
+      <div v-if="currentView==='map'">
         <GoogleMap id="gmap"
                   ref="gmap"
                   v-on:emitMapCenter="readMapCenter"
                   :mapCenter="mapCenter" ></GoogleMap>
       </div>
+      <div v-else-if="currentView==='query'">
+        <SparqlConsole id="console"></SparqlConsole>
+      </div>
       <div v-else>
-        <SparqlConsole id="console"
-                      :postcode="selectedPostcode"></SparqlConsole>
+        <ResultView id="result">Results can be interesting</ResultView>
       </div>
     </div>
-    <md-bottom-bar @change="displayMap = !displayMap">
-      <md-bottom-bar-item md-active>Map</md-bottom-bar-item>
-      <md-bottom-bar-item>Query</md-bottom-bar-item>
+    <md-bottom-bar>
+      <md-bottom-bar-item @click="currentView='map'" md-active>Map</md-bottom-bar-item>
+      <md-bottom-bar-item @click="currentView='query'">Query</md-bottom-bar-item>
+      <md-bottom-bar-item @click="currentView='result'">Result</md-bottom-bar-item>
     </md-bottom-bar>
   </div>
 </template>
@@ -28,6 +31,7 @@
 <script>
   import GoogleMap from '@/components/GoogleMap'
   import SparqlConsole from '@/components/SparqlConsole'
+  import ResultView from '@/components/ResultView'
 
   const axios = require('axios')
   const Promise = require('bluebird')
@@ -37,8 +41,7 @@
     name: 'app',
     data () {
       return {
-        displayMap: true,
-        displayConsole: false,
+        currentView: 'map',
         selectedPostcode: '',
         visiblePostcodes: [],
         mapCenter: new window.google.maps.LatLng(51.46040383078197, -2.6015971891367826)
@@ -46,7 +49,8 @@
     },
     components: {
       GoogleMap,
-      SparqlConsole
+      SparqlConsole,
+      ResultView
     },
     methods: {
       updateCenter: function () {
@@ -91,6 +95,7 @@
       },
       getData: function () {
         Promise.map(this.visiblePostcodes, postcode => axios.get(postcode.properties.url).then((response) => {
+          // console.log(postcode.properties.url)
           var totalPaid = 0
           const data = response.data.result.items
           data.forEach((transaction) => {
@@ -125,7 +130,7 @@
     },
     watch: {
       selectedPostcode: function (newPostcode) {
-        // console.log(`App: selectedPostcode changed to - ${this.selectedPostcode}`)
+        this.$store.commit('updatePostcode', newPostcode)
         if (newPostcode.length === 7) {
           this.updateCenter()
         }
@@ -145,7 +150,7 @@
   margin: auto;
   margin-top: 60px;
   width: 450px;
-  height: 430px;
+  height: 480px;
   box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.11);
 }
 

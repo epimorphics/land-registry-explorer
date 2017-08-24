@@ -122,7 +122,7 @@ export default {
 <style scoped>
 .google-map {
   width: 450px;
-  height: 300px;
+  height: 350px;
   margin: 0 auto;
   background: gray;
 }
