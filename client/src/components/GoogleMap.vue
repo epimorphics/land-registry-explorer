@@ -13,11 +13,33 @@ export default {
   name: 'google-map',
   data () {
     return {
+      visiblePostcodes: [],
       map: {},
       mapCenter: new window.google.maps.LatLng(51.46040383078197, -2.6015971891367826),
-      visiblePostcodes: [],
-      infoWindow: new window.google.maps.InfoWindow()
+      infoWindow: new window.google.maps.InfoWindow(),
+      populatingData: false
     }
+  },
+  mounted () {
+    const mVue = this
+    const element = document.getElementById('gmap')
+    const options = {
+      zoom: 17,
+      center: this.mapCenter,
+      disableDefaultUI: true,
+      zoomControl: true,
+      minZoom: 17,
+      maxZoom: 18
+    }
+    const map = new window.google.maps.Map(element, options)
+
+    map.addListener('idle', function () {
+      if (!mVue.populatingData) {
+        mVue.mapCenter = map.getCenter()
+        mVue.getNearbyPostcodes()
+      }
+    })
+    mVue.map = map
   },
   methods: {
     updateMapCenter: function () {
@@ -99,7 +121,6 @@ export default {
         // Close the ring by making the last position the same as the first.
         polygon.reverse().push(polygon[0])
         var postcodePolygon = turf.polygon([polygon])
-        // console.log(turfPolygon)
         this.visiblePostcodes.forEach((postcodePoint) => {
           if (turf.inside(postcodePoint, postcodePolygon)) {
             postcodePolygon.id = postcodePoint.id
@@ -144,14 +165,16 @@ export default {
           this.infoWindow.close()
         }
         const centroid = event.feature.getProperty('centroid')
+        const averagePricePaid = event.feature.getProperty('averagePaid').toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })
         const message = `<p><b>${event.feature.getId()}</b></p>` +
-                        `<p>Average Price Paid: £${event.feature.getProperty('averagePaid')}</p>`
+                        `<p>Average Price Paid: ${averagePricePaid}</p>`
         this.infoWindow = new window.google.maps.InfoWindow({
           content: message,
           position: new window.google.maps.LatLng(centroid[1], centroid[0])
         })
         this.infoWindow.open(this.map)
       })
+      this.populatingData = false
     }
   },
   computed: {
@@ -159,31 +182,13 @@ export default {
       return this.$store.state.postcode
     }
   },
-  mounted () {
-    const mVue = this
-    const element = document.getElementById('gmap')
-    const options = {
-      zoom: 17,
-      center: this.mapCenter,
-      disableDefaultUI: true,
-      zoomControl: true,
-      minZoom: 17,
-      maxZoom: 18
-    }
-    const map = new window.google.maps.Map(element, options)
-
-    map.addListener('idle', function () {
-      mVue.mapCenter = map.getCenter()
-      mVue.getNearbyPostcodes()
-    })
-    mVue.map = map
-  },
   watch: {
     mapCenter: function () {
       this.map.panTo(this.mapCenter)
     },
     postcode: function (newPostcode) {
       if (newPostcode.length === 7) {
+        this.populatingData = true
         this.updateMapCenter()
       }
     }
