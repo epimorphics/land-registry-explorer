@@ -1,9 +1,17 @@
 <template>
   <div class="result-view">
     <div id="visualization" v-if="canVisualize">
-      <span>Number of sales per property type</span>
-      <div id="pieChart"></div>
-      <span>Average Price Paid per Year</span>
+      <div>
+        <div class="inline">
+          <span>Number of sales per property type</span>
+          <div id="pieChart"></div>
+        </div>
+        <div class="inline">
+          <span>Latest Property Sale</span>
+          <div id="dataGrid"></div>
+        </div>
+      </div>
+      <span id="title">Average Price Paid per Year</span>
       <div id="barChart"></div>
     </div>
     <div class="result-view" id="json" v-else>
@@ -27,6 +35,18 @@
     mounted () {
       var pieChart = dc.pieChart('#pieChart')
       var barChart = dc.barChart('#barChart')
+      // var dataTable = dc.dataTable('#dataTable')
+      // <div class='inline' id='dataTable'>
+      //   <div class='header'>
+      //     <span id='title'>Latest Transaction</span>
+      //     <span id='block'>Address:</span>
+      //     <span id='block'>Price Paid:</span>
+      //     <span id='block'>Property Type:</span>
+      //     <span id='block'>Date:</span>
+      //   </div>
+      // </div>
+      var dataGrid = dc.dataGrid('#dataGrid')
+
       var ndx = crossfilter(this.result)
 
       var propertyTypeDimension = ndx.dimension(function (d) {
@@ -62,6 +82,10 @@
           }
         }
       )
+
+      var dateDimension = ndx.dimension(function (d) {
+        return d.date.toLocaleString().substring(0, 10)
+      })
 
       var colorScale = d3.scale.ordinal()
         .domain(['terraced', 'semi-detached', 'detached', 'flat-maisonette'])
@@ -101,7 +125,6 @@
         .gap(1)
         .centerBar(false)
         .margins({top: 10, right: 0, bottom: 45, left: 55})
-        .turnOnControls(true)
 
       barChart.xAxis()
         .tickFormat(d => '\'' + d.substring(2, 4))
@@ -109,7 +132,52 @@
         .tickPadding(10)
 
       barChart.yAxis()
+        .tickFormat(d => d.toLocaleString('en-GB', {
+          style: 'currency',
+          currency: 'GBP',
+          maximumFractionDigits: 0,
+          minimumFractionDigits: 0
+        }))
         .tickSize(2)
+
+      dataGrid
+          .dimension(dateDimension)
+          .group(function (d) {
+            return d.propertyType
+          })
+          .html(function (d) { return `<div>Address: ${d.paon} ${d.street} PP: ${d.amount}</div>` })
+          .size(1)
+          .sortBy(function (d) {
+            return d.date.toLocaleString().substring(0, 10)
+          })
+          .order(d3.ascending)
+
+      // dataTable
+      //   .dimension(dateDimension)
+      //   .group(function (d) {
+      //     return d.propertyType
+      //   })
+      //   .columns([
+      //     function (d) { return `${d.paon} ${d.street}\n` },
+      //     function (d) {
+      //       return d.amount.toLocaleString('en-GB', {
+      //         style: 'currency',
+      //         currency: 'GBP',
+      //         maximumFractionDigits: 2,
+      //         minimumFractionDigits: 2
+      //       })
+      //     },
+      //     function (d) { return d.propertyType },
+      //     function (d) { return d.date.toLocaleString().substring(0, 10) }
+      //   ])
+      //   .size(1)
+      //   .sortBy(function (d) {
+      //     return d.date.toLocaleString().substring(0, 10)
+      //   })
+      //   .order(d3.ascending)
+      //   .on('renderlet', function (table) {
+      //     table.selectAll('.dc-table-group').classed('info', true)
+      //   })
 
       dc.renderAll()
     }
@@ -129,8 +197,17 @@
   overflow-y: scroll;
 }
 
-#visualization {
+.inline {
   display: inline-block;
+}
+
+#block {
+  display: block;
+}
+
+#title {
+  display: block;
+  text-align: center;
 }
 
 </style>
