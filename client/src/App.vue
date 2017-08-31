@@ -11,16 +11,16 @@
         <GoogleMap id="gmap" ref="gmap"></GoogleMap>
       </div>
       <div v-else-if="currentView==='query'">
-        <SparqlConsole id="console"></SparqlConsole>
+        <SparqlConsole id="console" v-on:runQuery="openResult"></SparqlConsole>
       </div>
       <div v-else>
         <ResultView id="result">Results can be interesting</ResultView>
       </div>
     </div>
     <md-bottom-bar>
-      <md-bottom-bar-item @click="currentView='map'" md-active>Map</md-bottom-bar-item>
-      <md-bottom-bar-item @click="currentView='query'">Query</md-bottom-bar-item>
-      <md-bottom-bar-item @click="currentView='result'">Result</md-bottom-bar-item>
+      <md-bottom-bar-item id="map-button" @click="currentView='map'" md-active>Map</md-bottom-bar-item>
+      <md-bottom-bar-item id="query-button" @click="currentView='query'">Query</md-bottom-bar-item>
+      <md-bottom-bar-item id="result-button" @click="currentView='result'">Result</md-bottom-bar-item>
     </md-bottom-bar>
   </div>
 </template>
@@ -34,8 +34,7 @@
     name: 'app',
     data () {
       return {
-        currentView: 'map',
-        selectedPostcode: ''
+        currentView: 'map'
       }
     },
     components: {
@@ -43,9 +42,20 @@
       SparqlConsole,
       ResultView
     },
-    watch: {
-      selectedPostcode: function (newPostcode) {
-        this.$store.commit('updatePostcode', newPostcode)
+    methods: {
+      openResult: function () {
+        const resultButton = document.getElementById('result-button')
+        resultButton.click()
+      }
+    },
+    computed: {
+      selectedPostcode: {
+        get: function () {
+          return this.$store.state.postcode
+        },
+        set: function (newPostcode) {
+          this.$store.commit('updatePostcode', newPostcode)
+        }
       }
     }
   }

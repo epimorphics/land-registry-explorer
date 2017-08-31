@@ -1,18 +1,20 @@
 <template>
   <div class="result-view">
     <div id="visualization" v-if="canVisualize">
-      <div>
-        <div class="inline">
-          <span>Number of sales per property type</span>
+      <div id="pieTable">
+        <div class="pie">
+          <span class="title">Number of Sales per Property Type</span>
           <div id="pieChart"></div>
         </div>
-        <div class="inline">
-          <span>Latest Property Sale</span>
+        <div>
+          <span class="title">Latest Property Sale</span>
           <div id="dataGrid"></div>
         </div>
       </div>
-      <span id="title">Average Price Paid per Year</span>
-      <div id="barChart"></div>
+      <div class="bar">
+        <span class="title">Average Price Paid per Year</span>
+        <div id="barChart"></div>
+      </div>
     </div>
     <div class="result-view" id="json" v-else>
       <pre>{{result}}</pre>
@@ -29,22 +31,12 @@
     data () {
       return {
         result: this.$store.state.queryResult,
-        canVisualize: true
+        canVisualize: false
       }
     },
     mounted () {
       var pieChart = dc.pieChart('#pieChart')
       var barChart = dc.barChart('#barChart')
-      // var dataTable = dc.dataTable('#dataTable')
-      // <div class='inline' id='dataTable'>
-      //   <div class='header'>
-      //     <span id='title'>Latest Transaction</span>
-      //     <span id='block'>Address:</span>
-      //     <span id='block'>Price Paid:</span>
-      //     <span id='block'>Property Type:</span>
-      //     <span id='block'>Date:</span>
-      //   </div>
-      // </div>
       var dataGrid = dc.dataGrid('#dataGrid')
 
       var ndx = crossfilter(this.result)
@@ -83,13 +75,13 @@
         }
       )
 
-      var dateDimension = ndx.dimension(function (d) {
-        return d.date.toLocaleString().substring(0, 10)
+      var timeDimension = ndx.dimension(function (d) {
+        return d.date.getTime()
       })
 
       var colorScale = d3.scale.ordinal()
-        .domain(['terraced', 'semi-detached', 'detached', 'flat-maisonette'])
-        .range(['#D82C8C', '#17A7CF', '#E58304', '#BBCCEE'])
+        .domain(['terraced', 'semi-detached', 'detached', 'flat-maisonette', 'other'])
+        .range(['#D82C8C', '#17A7CF', '#E58304', '#BBCCEE', '#4439DD'])
 
       pieChart
         .width(150)
@@ -124,7 +116,7 @@
         .yAxisLabel('')
         .gap(1)
         .centerBar(false)
-        .margins({top: 10, right: 0, bottom: 45, left: 55})
+        .margins({top: 10, right: 0, bottom: 45, left: 65})
 
       barChart.xAxis()
         .tickFormat(d => '\'' + d.substring(2, 4))
@@ -141,45 +133,36 @@
         .tickSize(2)
 
       dataGrid
-          .dimension(dateDimension)
-          .group(function (d) {
-            return d.propertyType
-          })
-          .html(function (d) { return `<div>Address: ${d.paon} ${d.street} PP: ${d.amount}</div>` })
-          .size(1)
-          .sortBy(function (d) {
-            return d.date.toLocaleString().substring(0, 10)
-          })
-          .order(d3.ascending)
-
-      // dataTable
-      //   .dimension(dateDimension)
-      //   .group(function (d) {
-      //     return d.propertyType
-      //   })
-      //   .columns([
-      //     function (d) { return `${d.paon} ${d.street}\n` },
-      //     function (d) {
-      //       return d.amount.toLocaleString('en-GB', {
-      //         style: 'currency',
-      //         currency: 'GBP',
-      //         maximumFractionDigits: 2,
-      //         minimumFractionDigits: 2
-      //       })
-      //     },
-      //     function (d) { return d.propertyType },
-      //     function (d) { return d.date.toLocaleString().substring(0, 10) }
-      //   ])
-      //   .size(1)
-      //   .sortBy(function (d) {
-      //     return d.date.toLocaleString().substring(0, 10)
-      //   })
-      //   .order(d3.ascending)
-      //   .on('renderlet', function (table) {
-      //     table.selectAll('.dc-table-group').classed('info', true)
-      //   })
+        .dimension(timeDimension)
+        .group(function (d) {
+          return d.propertyType
+        })
+        .html(function (d) {
+          const html = `<div><u>Address:</u> ${d.paon} ${d.street}</div>` +
+            `<div><u>Town:</u> ${d.town}</div>` +
+            `<div><u>Property Type:</u> ${d.propertyType}</div>` +
+            `<div><u>Price Paid:</u> ${d.amount.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })}</div>` +
+            `<div><u>Date:</u> ${d.date.toLocaleString().substring(0, 10)}</div>`
+          return html
+        })
+        .sortBy(function (d) {
+          return d.date.getTime()
+        })
+        .size(1)
 
       dc.renderAll()
+    },
+    computed: {
+      updatedResult () {
+        this.$store.state.queryResult
+      }
+    },
+    watch: {
+      updatedResult: function (newResult) {
+        console.log('I am HERE')
+        this.result = newResult
+        dc.redrawAll()
+      }
     }
   }
 </script>
@@ -192,22 +175,38 @@
   font-size: 7px;
 }
 
+#pieTable {
+  width: 420px;
+  height: 175px;
+  margin-top: -10px;
+  margin-right: 40px;
+  margin-left: 20px;
+  float: left;
+}
+
+.pie {
+  float: left;
+  text-align: center;
+  margin-right: 20px;
+}
+
+.bar {
+  margin-left: 20px;
+}
+
 #json {
   overflow-x: scroll;
   overflow-y: scroll;
-}
-
-.inline {
-  display: inline-block;
 }
 
 #block {
   display: block;
 }
 
-#title {
+.title {
   display: block;
   text-align: center;
+  font-weight: bold;
 }
 
 </style>
