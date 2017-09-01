@@ -21,6 +21,7 @@ export default {
     }
   },
   mounted () {
+    this.updateMapCenter()
     const mVue = this
     const element = document.getElementById('gmap')
     const options = {
@@ -45,13 +46,11 @@ export default {
     updateMapCenter: function () {
       const url = `https://api.postcodes.io/postcodes/${this.postcode}`
       console.log(`Centroid URL: ${url}`)
-      axios.get(url).then((response) => {
+      return axios.get(url).then((response) => {
         const latitude = response.data.result.latitude
         const longitude = response.data.result.longitude
         this.mapCenter = new window.google.maps.LatLng(latitude, longitude)
         // console.log(`updateMapCenter: ${JSON.stringify(this.mapCenter)}`)
-      }).then(() => {
-        this.getNearbyPostcodes()
       }).catch((error) => {
         console.log(`Error: ${error}`)
       })
@@ -189,7 +188,9 @@ export default {
     postcode: function (newPostcode) {
       if (newPostcode.length === 7) {
         this.populatingData = true
-        this.updateMapCenter()
+        this.updateMapCenter().then(() => {
+          this.getNearbyPostcodes()
+        })
       }
     }
   }
@@ -198,8 +199,8 @@ export default {
 
 <style scoped>
 .google-map {
-  width: 450px;
-  height: 350px;
+  width: 550px;
+  height: 470px;
   margin: 0 auto;
   background: gray;
 }

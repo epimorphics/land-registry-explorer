@@ -71,8 +71,8 @@
   color: #2c3e50;
   margin: auto;
   margin-top: 60px;
-  width: 450px;
-  height: 480px;
+  width: 550px;
+  height: 600px;
   box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.11);
 }
 

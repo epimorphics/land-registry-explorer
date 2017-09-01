@@ -31,7 +31,7 @@
     data () {
       return {
         result: this.$store.state.queryResult,
-        canVisualize: false
+        canVisualize: true
       }
     },
     mounted () {
@@ -84,8 +84,8 @@
         .range(['#D82C8C', '#17A7CF', '#E58304', '#BBCCEE', '#4439DD'])
 
       pieChart
-        .width(150)
-        .height(150)
+        .width(200)
+        .height(200)
         .slicesCap(4)
         .dimension(propertyTypeDimension)
         .group(propertyTypeGroup)
@@ -101,8 +101,8 @@
       }
 
       barChart
-        .width(400)
-        .height(170)
+        .width(500)
+        .height(215)
         .dimension(yearDimension)
         .group(yearAvgGroup)
         .valueAccessor(function (p) {
@@ -169,15 +169,15 @@
 
 <style scoped>
 .result-view {
-  width: 450px;
-  height: 350px;
+  width: 550px;
+  height: 470px;
   text-align: left;
   font-size: 7px;
 }
 
 #pieTable {
-  width: 420px;
-  height: 175px;
+  width: 550px;
+  height: 235px;
   margin-top: -10px;
   margin-right: 40px;
   margin-left: 20px;
@@ -187,7 +187,7 @@
 .pie {
   float: left;
   text-align: center;
-  margin-right: 20px;
+  margin-right: 60px;
 }
 
 .bar {
@@ -206,6 +206,7 @@
 .title {
   display: block;
   text-align: center;
+  font-size: 13px;
   font-weight: bold;
 }
 

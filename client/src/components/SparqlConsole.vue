@@ -5,7 +5,8 @@
                 v-model="code" 
                 :options="editorOption"
                 @changes="onEditorChanges"
-                @beforeChange="onEditorBeforeChange">
+                @beforeChange="onEditorBeforeChange"
+                @beforeSelectionChange="onEditorBeforeSelectionChange">
     </codemirror>
     <div class="my-fab">
       <md-button @click="runQuery" class="md-fab"></md-button>
@@ -28,9 +29,7 @@
           lineNumbers: true,
           line: true,
           matchBrackets: true,
-          mode: {
-            ext: 'vue'
-          },
+          mode: 'application/sparql-query',
           theme: 'base16-light'
         }
       }
@@ -60,27 +59,30 @@
         //   index = string.indexOf('\n')
         // }
       },
+      onEditorBeforeSelectionChange: function (codemirror, changeObject) {
+        const ranges = JSON.parse(JSON.stringify(changeObject.ranges))
+        ranges[0].head = JSON.parse(JSON.stringify(changeObject.ranges[0].anchor))
+        changeObject.update(ranges)
+      },
       onEditorBeforeChange: function (codemirror, changeObject) {
-        console.log(JSON.stringify(changeObject))
         if (changeObject.origin !== '+delete' && changeObject.origin !== '+input' && changeObject.origin !== 'setValue') {
           changeObject.cancel()
         }
-        // TODO: Handle multi line delete
       },
       onEditorChanges: function (codemirror, changeObjects) {
         const newEditorState = codemirror.getValue()
         const postcodeStartIndex = this.queryPrefix.length
         const postcodeEndIndex = postcodeStartIndex + this.postcode.length
         // console.log(`Current Postcode: ${this.code.substring(postcodeStartIndex, postcodeEndIndex)}`)
-        console.log(`onEditorChange: ${JSON.stringify(changeObjects)}`)
-        console.log(`postcodeStartIndex value: ${this.code[postcodeStartIndex]}`)
-        console.log(`postcodeEndIndex value: ${this.code[postcodeEndIndex]}`)
+        // console.log(`onEditorChange: ${JSON.stringify(changeObjects)}`)
+        // console.log(`postcodeStartIndex value: ${this.code[postcodeStartIndex]}`)
+        // console.log(`postcodeEndIndex value: ${this.code[postcodeEndIndex]}`)
         // console.log(`onEditorChange: ${codemirror.getValue()}`)
         for (var i = 0; i < changeObjects.length; i++) {
           const changeObject = changeObjects[i]
           if (changeObject.origin === '+delete') {
             const deletedCharIndex = this.getIndexAt(codemirror.getValue(), changeObject.from.line, changeObject.from.ch)
-            if (deletedCharIndex <= postcodeStartIndex) { // Change in query prefix
+            if (deletedCharIndex < postcodeStartIndex) { // Change in query prefix
               this.queryPrefix = newEditorState.substring(0, postcodeStartIndex - 1)
             } else if (deletedCharIndex < postcodeEndIndex) { // Change in the postcode
               this.postcode = newEditorState.substring(postcodeStartIndex, postcodeEndIndex - 1)
@@ -151,8 +153,8 @@
 
 <style scoped>
 .sparql-console {
-  width: 450px;
-  height: 350px;
+  width: 550px;
+  height: 470px;
   text-align: left;
 }
 
@@ -163,8 +165,8 @@
 
 .my-fab {
   position: relative;
-  bottom: 70px;
-  left: 380px;
+  bottom: 75px;
+  left: 470px;
   z-index: 5;
 }
 </style>
