@@ -141,9 +141,6 @@
       }
     },
     watch: {
-      postcode: function () {
-        this.code = this.$store.getters.code
-      },
       queryResult: function () {
         this.$emit('runQuery')
       }

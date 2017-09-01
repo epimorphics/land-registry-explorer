@@ -4,7 +4,7 @@
       <div id="pieTable">
         <div class="pie">
           <span class="title">Number of Sales per Property Type</span>
-          <div id="pieChart"></div>
+          <div id="rowChart"></div>
         </div>
         <div>
           <span class="title">Latest Property Sale</span>
@@ -35,7 +35,7 @@
       }
     },
     mounted () {
-      var pieChart = dc.pieChart('#pieChart')
+      var rowChart = dc.rowChart('#rowChart')
       var barChart = dc.barChart('#barChart')
       var dataGrid = dc.dataGrid('#dataGrid')
 
@@ -79,26 +79,42 @@
         return d.date.getTime()
       })
 
-      var colorScale = d3.scale.ordinal()
-        .domain(['terraced', 'semi-detached', 'detached', 'flat-maisonette', 'other'])
-        .range(['#D82C8C', '#17A7CF', '#E58304', '#BBCCEE', '#4439DD'])
+      // var colorScale = d3.scale.ordinal()
+      //   .domain(['terraced', 'semi-detached', 'detached', 'flat-maisonette', 'other'])
+      //   .range(['#D82C8C', '#17A7CF', '#E58304', '#BBCCEE', '#4439DD'])
 
-      pieChart
-        .width(200)
-        .height(200)
-        .slicesCap(4)
-        .dimension(propertyTypeDimension)
-        .group(propertyTypeGroup)
-        .colors(colorScale)
-        .label((d) => {
-          return `${d.key}(${d.value})`
-        })
-        .externalRadiusPadding(10)
+      // pieChart
+      //   .width(200)
+      //   .height(200)
+      //   .slicesCap(4)
+      //   .dimension(propertyTypeDimension)
+      //   .group(propertyTypeGroup)
+      //   .colors(colorScale)
+      //   .label((d) => {
+      //     return `${d.key}(${d.value})`
+      //   })
+      //   .externalRadiusPadding(10)
 
       var yearDomain = []
       for (var i = 1995; i < 2018; i++) {
         yearDomain.push(i.toString())
       }
+
+      rowChart
+        .width(260)
+        .height(200)
+        .group(propertyTypeGroup)
+        .dimension(propertyTypeDimension)
+        .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+        .title(function (d) {
+          return d.propertyType
+        })
+        .elasticX(true)
+
+      rowChart.xAxis()
+        .ticks(5)
+        .tickSize(2)
+        .tickPadding(10)
 
       barChart
         .width(500)
@@ -176,7 +192,7 @@
 }
 
 #pieTable {
-  width: 550px;
+  width: 500px;
   height: 235px;
   margin-top: -10px;
   margin-right: 40px;
@@ -187,7 +203,7 @@
 .pie {
   float: left;
   text-align: center;
-  margin-right: 60px;
+  margin-right: 10px;
 }
 
 .bar {

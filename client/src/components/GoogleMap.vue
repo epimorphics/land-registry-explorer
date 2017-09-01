@@ -158,27 +158,35 @@ export default {
           strokeWeight: 1
         }
       })
-
+      const mVue = this
       this.map.data.addListener('click', function (event) {
-        if (this.infoWindow) {
-          this.infoWindow.close()
+        if (mVue.infoWindow) {
+          mVue.infoWindow.close()
         }
         const centroid = event.feature.getProperty('centroid')
         const averagePricePaid = event.feature.getProperty('averagePaid').toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })
         const message = `<p><b>${event.feature.getId()}</b></p>` +
                         `<p>Average Price Paid: ${averagePricePaid}</p>`
-        this.infoWindow = new window.google.maps.InfoWindow({
+        mVue.infoWindow = new window.google.maps.InfoWindow({
           content: message,
           position: new window.google.maps.LatLng(centroid[1], centroid[0])
         })
-        this.infoWindow.open(this.map)
+        console.log(`Postcode Before: ${mVue.postcode}`)
+        mVue.postcode = event.feature.getId()
+        console.log(`Postcode After: ${mVue.postcode}`)
+        mVue.infoWindow.open(mVue.map)
       })
       this.populatingData = false
     }
   },
   computed: {
-    postcode () {
-      return this.$store.state.postcode
+    postcode: {
+      get: function () {
+        return this.$store.state.postcode
+      },
+      set: function (newPostcode) {
+        this.$store.commit('updatePostcode', newPostcode)
+      }
     }
   },
   watch: {
