@@ -79,22 +79,6 @@
         return d.date.getTime()
       })
 
-      // var colorScale = d3.scale.ordinal()
-      //   .domain(['terraced', 'semi-detached', 'detached', 'flat-maisonette', 'other'])
-      //   .range(['#D82C8C', '#17A7CF', '#E58304', '#BBCCEE', '#4439DD'])
-
-      // pieChart
-      //   .width(200)
-      //   .height(200)
-      //   .slicesCap(4)
-      //   .dimension(propertyTypeDimension)
-      //   .group(propertyTypeGroup)
-      //   .colors(colorScale)
-      //   .label((d) => {
-      //     return `${d.key}(${d.value})`
-      //   })
-      //   .externalRadiusPadding(10)
-
       var yearDomain = []
       for (var i = 1995; i < 2018; i++) {
         yearDomain.push(i.toString())
@@ -105,7 +89,7 @@
         .height(200)
         .group(propertyTypeGroup)
         .dimension(propertyTypeDimension)
-        .ordinalColors(['#8A7F00', '#BDB231', '#F0E564', '#FFFF97', '#FFFFCA'])
+        .ordinalColors(['#005E00', '#0F8500', '#35AB17', '#5BD13D', '#81F763'])
         .title(function (d) {
           return d.propertyType
         })
@@ -127,9 +111,10 @@
         .x(d3.scale.ordinal().domain(yearDomain))
         .xUnits(dc.units.ordinal)
         .elasticY(true)
-        .xAxisLabel('Year')
-        .elasticX(true)
         .yAxisLabel('')
+        .elasticX(true)
+        .xAxisLabel('Year')
+        .renderHorizontalGridLines(true)
         .gap(1)
         .centerBar(false)
         .margins({top: 10, right: 0, bottom: 45, left: 65})
@@ -148,21 +133,6 @@
         }))
         .tickSize(2)
 
-      // barChart.on('renderlet', function (chart) {
-      //   chart.selectAll('rect').on('click', function (d) {
-      //     console.log(`click: ${JSON.stringify(d)}`)
-      //   })
-      // })
-
-      // barChart.on('pretransition', function (chart) {
-      //   chart.selectAll('rect.bar').on('click', function (d) {
-      //     console.log('click')
-      //     chart.filter(null)
-      //       .filter(d.data.key)
-      //       .redrawGroup()
-      //   })
-      // })
-
       dataGrid
         .dimension(timeDimension)
         .group(function (d) {
@@ -171,6 +141,7 @@
         .html(function (d) {
           const html = `<div><u>Address:</u> ${d.paon} ${d.street}</div>` +
             `<div><u>Town:</u> ${d.town}</div>` +
+            `<div><u>County:</u> ${d.county}</div>` +
             `<div><u>Property Type:</u> ${d.propertyType}</div>` +
             `<div><u>Price Paid:</u> ${d.amount.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })}</div>` +
             `<div><u>Date:</u> ${d.date.toLocaleString().substring(0, 10)}</div>`
@@ -198,12 +169,14 @@
   }
 </script>
 
-<style scoped>
+<style>
+@import "../../node_modules/dc/dc.css";
+
 .result-view {
   width: 550px;
   height: 470px;
   text-align: left;
-  font-size: 7px;
+  font-size: 13px;
 }
 
 #pieTable {
@@ -234,10 +207,15 @@
   display: block;
 }
 
+.dc-grid-group {
+  visibility: collapse;
+  margin-bottom: -40px;
+}
+
 .title {
   display: block;
   text-align: center;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: bold;
 }
 

@@ -11,7 +11,7 @@
         <GoogleMap id="gmap" ref="gmap"></GoogleMap>
       </div>
       <div v-else-if="currentView==='query'">
-        <SparqlConsole id="console" v-on:runQuery="openResult"></SparqlConsole>
+        <SparqlConsole id="console" v-on:runQuery="runQuery"></SparqlConsole>
       </div>
       <div v-else>
         <ResultView id="result">Results can be interesting</ResultView>
@@ -20,12 +20,14 @@
     <md-bottom-bar>
       <md-bottom-bar-item md-icon="map" id="map-button" @click="currentView='map'" md-active>Map</md-bottom-bar-item>
       <md-bottom-bar-item md-icon="code" id="query-button" @click="currentView='query'">Query</md-bottom-bar-item>
-      <md-bottom-bar-item md-icon="equalizer" id="result-button" @click="currentView='result'">Result</md-bottom-bar-item>
+      <md-bottom-bar-item md-icon="equalizer" id="result-button" @click="runQuery">Result</md-bottom-bar-item>
     </md-bottom-bar>
   </div>
 </template>
 
 <script>
+  const d3 = require('d3-sparql')
+
   import GoogleMap from '@/components/GoogleMap'
   import SparqlConsole from '@/components/SparqlConsole'
   import ResultView from '@/components/ResultView'
@@ -34,7 +36,8 @@
     name: 'app',
     data () {
       return {
-        currentView: 'map'
+        currentView: 'map',
+        endpoint: 'http://landregistry.data.gov.uk/landregistry/query'
       }
     },
     components: {
@@ -46,6 +49,17 @@
       openResult: function () {
         const resultButton = document.getElementById('result-button')
         resultButton.click()
+      },
+      setCurrentViewResult: function () {
+        console.log(this.$refs)
+        this.$refs.sparqlconsole.runQuery()
+      },
+      runQuery: function () {
+        const mVue = this
+        d3.sparql(this.endpoint, this.code, function (error, data) {
+          if (error) throw error
+          mVue.$store.commit('updateQueryResult', data)
+        })
       }
     },
     computed: {
@@ -56,6 +70,21 @@
         set: function (newPostcode) {
           this.$store.commit('updatePostcode', newPostcode)
         }
+      },
+      queryResult: {
+        get: function () {
+          return this.$store.state.queryResult
+        }
+      },
+      code: {
+        get: function () {
+          return this.$store.getters.code
+        }
+      }
+    },
+    watch: {
+      queryResult: function () {
+        this.currentView = 'result'
       }
     }
   }

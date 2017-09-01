@@ -17,12 +17,9 @@
 </template>
 
 <script>
-  const d3 = require('d3-sparql')
-
   export default {
     data () {
       return {
-        endpoint: 'http://landregistry.data.gov.uk/landregistry/query',
         editorOption: {
           inputStyle: 'contenteditable',
           tabSize: 2,
@@ -38,11 +35,8 @@
     },
     methods: {
       runQuery: function () {
-        const mVue = this
-        d3.sparql(this.endpoint, this.code, function (error, data) {
-          if (error) throw error
-          mVue.$store.commit('updateQueryResult', data)
-        })
+        const resultButton = document.getElementById('result-button')
+        resultButton.click()
       },
       getIndexAt: function (string, line, char) {
         var currentLine = 0
@@ -55,11 +49,6 @@
             return x + char
           }
         }
-        // var string = inputString
-        // var index = 0
-        // for (var x = 0; x < line; x++) {
-        //   index = string.indexOf('\n')
-        // }
       },
       onEditorBeforeSelectionChange: function (codemirror, changeObject) {
         const ranges = JSON.parse(JSON.stringify(changeObject.ranges))
@@ -75,11 +64,6 @@
         const newEditorState = codemirror.getValue()
         const postcodeStartIndex = this.queryPrefix.length
         const postcodeEndIndex = postcodeStartIndex + this.postcode.length
-        // console.log(`Current Postcode: ${this.code.substring(postcodeStartIndex, postcodeEndIndex)}`)
-        // console.log(`onEditorChange: ${JSON.stringify(changeObjects)}`)
-        // console.log(`postcodeStartIndex value: ${this.code[postcodeStartIndex]}`)
-        // console.log(`postcodeEndIndex value: ${this.code[postcodeEndIndex]}`)
-        // console.log(`onEditorChange: ${codemirror.getValue()}`)
         for (var i = 0; i < changeObjects.length; i++) {
           const changeObject = changeObjects[i]
           if (changeObject.origin === '+delete') {
@@ -117,9 +101,6 @@
       code: {
         get: function () {
           return this.$store.getters.code
-        },
-        set: function (newCode) {
-
         }
       },
       queryPrefix: {
@@ -137,14 +118,6 @@
         set: function (newQueryPostfix) {
           this.$store.commit('updateQueryPostfix', newQueryPostfix)
         }
-      },
-      queryResult () {
-        return this.$store.state.queryResult
-      }
-    },
-    watch: {
-      queryResult: function () {
-        this.$emit('runQuery')
       }
     }
   }
