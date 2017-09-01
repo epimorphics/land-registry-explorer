@@ -149,10 +149,16 @@ export default {
         if (postcode.properties.averagePaid < min) min = postcode.properties.averagePaid
       })
 
-      const bezInterpolator = chroma.scale(['yellow', 'red', 'black'])
+      const bezInterpolator = chroma.scale(['#fff0a9', '#e69735', '#682a0f'])
       this.map.data.setStyle((feature) => {
-        var colorIndex = (feature.getProperty('averagePaid') - min) / (max - min)
-        var color = bezInterpolator(colorIndex)
+        const avgPaid = feature.getProperty('averagePaid')
+        var colorIndex = (avgPaid - min) / (max - min)
+        var color
+        if (avgPaid === 0) {
+          color = '#ffffff'
+        } else {
+          color = bezInterpolator(colorIndex)
+        }
         return {
           fillColor: color,
           strokeWeight: 1
@@ -171,9 +177,7 @@ export default {
           content: message,
           position: new window.google.maps.LatLng(centroid[1], centroid[0])
         })
-        console.log(`Postcode Before: ${mVue.postcode}`)
         mVue.postcode = event.feature.getId()
-        console.log(`Postcode After: ${mVue.postcode}`)
         mVue.infoWindow.open(mVue.map)
       })
       this.populatingData = false

@@ -18,9 +18,9 @@
       </div>
     </div>
     <md-bottom-bar>
-      <md-bottom-bar-item id="map-button" @click="currentView='map'" md-active>Map</md-bottom-bar-item>
-      <md-bottom-bar-item id="query-button" @click="currentView='query'">Query</md-bottom-bar-item>
-      <md-bottom-bar-item id="result-button" @click="currentView='result'">Result</md-bottom-bar-item>
+      <md-bottom-bar-item md-icon="map" id="map-button" @click="currentView='map'" md-active>Map</md-bottom-bar-item>
+      <md-bottom-bar-item md-icon="code" id="query-button" @click="currentView='query'">Query</md-bottom-bar-item>
+      <md-bottom-bar-item md-icon="equalizer" id="result-button" @click="currentView='result'">Result</md-bottom-bar-item>
     </md-bottom-bar>
   </div>
 </template>

@@ -105,7 +105,7 @@
         .height(200)
         .group(propertyTypeGroup)
         .dimension(propertyTypeDimension)
-        .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+        .ordinalColors(['#8A7F00', '#BDB231', '#F0E564', '#FFFF97', '#FFFFCA'])
         .title(function (d) {
           return d.propertyType
         })
@@ -147,6 +147,21 @@
           minimumFractionDigits: 0
         }))
         .tickSize(2)
+
+      // barChart.on('renderlet', function (chart) {
+      //   chart.selectAll('rect').on('click', function (d) {
+      //     console.log(`click: ${JSON.stringify(d)}`)
+      //   })
+      // })
+
+      // barChart.on('pretransition', function (chart) {
+      //   chart.selectAll('rect.bar').on('click', function (d) {
+      //     console.log('click')
+      //     chart.filter(null)
+      //       .filter(d.data.key)
+      //       .redrawGroup()
+      //   })
+      // })
 
       dataGrid
         .dimension(timeDimension)

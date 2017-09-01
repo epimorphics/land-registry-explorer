@@ -9,7 +9,9 @@
                 @beforeSelectionChange="onEditorBeforeSelectionChange">
     </codemirror>
     <div class="my-fab">
-      <md-button @click="runQuery" class="md-fab"></md-button>
+      <md-button @click="runQuery" class="md-fab">
+        <md-icon>play_arrow</md-icon>
+      </md-button>
     </div>
   </div>
 </template>
