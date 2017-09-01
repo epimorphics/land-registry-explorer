@@ -1,19 +1,11 @@
-# Server
-server/node_modules/
-server/data/postcode_centroids.json
-server/data/postcode_simple.json
-server/data/postcode_simple_voronoi.json
-server/data/clipped_postcode.json
-server/package-lock.json
-
 # Client 
-client/.DS_Store
-client/node_modules/
-client/dist/
-client/npm-debug.log*
-client/yarn-debug.log*
-client/yarn-error.log*
-client/package-lock.json
+.DS_Store
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
 
 # Editor directories and files
 .idea
