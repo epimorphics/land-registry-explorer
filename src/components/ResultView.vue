@@ -166,12 +166,13 @@
             return d.propertyType
           })
           .html(function (d) {
+            console.log(`String Locale: ${d.date.toLocaleString()}`)
             const html = `<div><u>Address:</u> ${d.paon} ${d.street}</div>` +
               `<div><u>Town:</u> ${d.town}</div>` +
               `<div><u>County:</u> ${d.county}</div>` +
               `<div><u>Property Type:</u> ${d.propertyType}</div>` +
               `<div><u>Price Paid:</u> ${d.amount.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })}</div>` +
-              `<div><u>Date:</u> ${d.date.toLocaleString().substring(0, 10)}</div>`
+              `<div><u>Date:</u> ${d.date.getDate()}/${d.date.getMonth() + 1}/${d.date.getFullYear()}</div>`
             return html
           })
           .sortBy(function (d) {

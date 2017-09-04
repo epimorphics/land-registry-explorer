@@ -127,4 +127,8 @@ a {
   box-shadow: 0px 0px 0px 0px rgba(0,0,0,0);
 }
 
+.md-bottom-bar-item {
+  max-width: 200px
+}
+
 </style>
