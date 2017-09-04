@@ -9,7 +9,7 @@
                 @beforeSelectionChange="onEditorBeforeSelectionChange">
     </codemirror>
     <div class="my-fab">
-      <md-button @click="runQuery" class="md-fab">
+      <md-button @click="runQuery" class="md-fab md-primary">
         <md-icon>play_arrow</md-icon>
       </md-button>
     </div>
@@ -123,7 +123,9 @@
   }
 </script>
 
-<style scoped>
+<style>
+@import "../../node_modules/vue-material/dist/vue-material.css";
+
 .sparql-console {
   width: 550px;
   height: 470px;
@@ -137,8 +139,9 @@
 
 .my-fab {
   position: relative;
-  bottom: 75px;
-  left: 470px;
+  bottom: 85px;
+  right: 15px;
+  text-align: right;
   z-index: 5;
 }
 </style>
