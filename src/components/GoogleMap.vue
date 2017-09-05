@@ -4,7 +4,8 @@
 
 <script>
 const chroma = require('chroma-js')
-const turf = require('@turf/turf')
+const turfInside = require('@turf/inside')
+const turfHelpers = require('@turf/helpers')
 const d3voronoi = require('d3-voronoi')
 const axios = require('axios')
 const Promise = require('bluebird')
@@ -62,7 +63,7 @@ export default {
       axios.get(url).then((response) => {
         const results = response.data.result
         results.forEach((result) => {
-          var postcode = turf.point([result.longitude, result.latitude])
+          var postcode = turfHelpers.point([result.longitude, result.latitude])
           postcode.id = result.postcode
           this.visiblePostcodes.push(postcode)
         })
@@ -119,9 +120,9 @@ export default {
         // Reverse coordinate order so it conforms to the right-hand rule.
         // Close the ring by making the last position the same as the first.
         polygon.reverse().push(polygon[0])
-        var postcodePolygon = turf.polygon([polygon])
+        var postcodePolygon = turfHelpers.polygon([polygon])
         this.visiblePostcodes.forEach((postcodePoint) => {
-          if (turf.inside(postcodePoint, postcodePolygon)) {
+          if (turfInside(postcodePoint, postcodePolygon)) {
             postcodePolygon.id = postcodePoint.id
             postcodePolygon.properties = postcodePoint.properties
             postcodePolygon.properties.centroid = postcodePoint.geometry.coordinates

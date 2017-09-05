@@ -45,7 +45,8 @@ const store = new Vuex.Store({
                   '  OPTIONAL {?addr lrcommon:street ?street}\n' +
                   '  OPTIONAL {?addr lrcommon:town ?town}\n' +
                   '}',
-    queryResult: {}
+    queryResult: {},
+    queryStatusCode: 0
   },
   mutations: {
     updatePostcode (state, postcode) {
@@ -54,11 +55,14 @@ const store = new Vuex.Store({
     updateQueryResult (state, result) {
       state.queryResult = result
     },
-    updateQueryPrefix (state, result) {
-      state.queryPrefix = result
+    updateQueryStatusCode (state, status) {
+      state.queryStatusCode = status
     },
-    updateQueryPostfix (state, result) {
-      state.queryPostfix = result
+    updateQueryPrefix (state, queryPrefix) {
+      state.queryPrefix = queryPrefix
+    },
+    updateQueryPostfix (state, queryPostfix) {
+      state.queryPostfix = queryPostfix
     }
   },
   getters: {

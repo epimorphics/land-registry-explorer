@@ -26,7 +26,8 @@
 </template>
 
 <script>
-  const d3 = require('d3-sparql')
+  const axios = require('axios')
+  // const d3 = require('d3-sparql')
 
   import GoogleMap from '@/components/GoogleMap'
   import SparqlConsole from '@/components/SparqlConsole'
@@ -56,10 +57,92 @@
       },
       runQuery: function () {
         const mVue = this
-        d3.sparql(this.endpoint, this.code, function (error, data) {
-          if (error) throw error
+        const url = mVue.endpoint + '?query=' + encodeURIComponent(mVue.code)
+        axios.get(url, {
+          headers: {
+            'Accept': 'application/sparql-results+json'
+          }
+        }).then(function (response) {
+          const data = mVue.parseQueryResult(response.data.results.bindings)
+          // console.log(`RESPONSE: ${JSON.stringify(result)}`)
+          mVue.$store.commit('updateQueryStatusCode', response.status)
           mVue.$store.commit('updateQueryResult', data)
+        }).catch((error) => {
+          if (error) {
+            mVue.$store.commit('updateQueryStatusCode', error.response.status)
+            mVue.$store.commit('updateQueryResult', error.response.data)
+          }
         })
+        // d3.sparql(this.endpoint, this.code, function (error, data) {
+        //   if (error) throw error
+        //   console.log(JSON.stringify(data))
+        //   mVue.$store.commit('updateQueryResult', data)
+        // })
+      },
+      parseQueryResult: function (input) {
+        const mVue = this
+        return input.map(function (row) {
+          var rowObject = {}
+          Object.keys(row).forEach(function (column) {
+            rowObject[column] = mVue.dataTypeCast(row[column])
+          })
+          // console.log(JSON.stringify(rowObject))
+          return rowObject
+        })
+
+        // const mVue = this
+        // // console.log(`parseQueryResult, input: ${JSON.stringify(input)}`)
+        // var results = []
+        // input.forEach(function (element) {
+        //   var result = {}
+        //   element.forEach(function (field) {
+        //     var parsedField = {}
+        //     parsedField[field.key] = mVue.dataTypeCast(field)
+        //   })
+        //   console.log(`single item: ${JSON.stringify(element)}`)
+        //   result.push(item)
+        // })
+        // return result
+      },
+      dataTypeCast: function (obj) {
+        const xmlSchema = 'http://www.w3.org/2001/XMLSchema#'
+        var value = obj.value
+        if (typeof obj.datatype === 'undefined') {
+          return value
+        }
+        var dataType = obj.datatype.replace(xmlSchema, '')
+        switch (dataType) {
+          case 'string':
+            value = new String(value) // eslint-disable-line
+            break
+          case 'boolean':
+            value = new Boolean(value === 'false' ? false : value) // eslint-disable-line
+            break
+          case 'float':
+          case 'integer':
+          case 'long':
+          case 'double':
+          case 'decimal':
+          case 'nonPositiveInteger':
+          case 'nonNegativeInteger':
+          case 'negativeInteger':
+          case 'int':
+          case 'unsignedLong':
+          case 'positiveInteger':
+          case 'short':
+          case 'unsignedInt':
+          case 'byte':
+          case 'unsignedShort':
+          case 'unsignedByte':
+            value = new Number(value) // eslint-disable-line
+            break
+          case 'date':
+          case 'time':
+          case 'dateTime':
+            value = new Date(value)
+            break
+        }
+        return value
       }
     },
     computed: {

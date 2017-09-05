@@ -16,16 +16,9 @@
         <div id="barChart"></div>
       </div>
     </div>
-    <div class="result-view" id="json" v-else-if="activeView==='result'">
-      <pre>
-  To visualize the data please return all of the following fields:
-  paon, street, town, county, propertyType, postcode, amount, date
-      </pre>
-      <pre>Query Result as JSON:</pre> 
+    <div class="result-view" id="json" v-else-if="activeView==='json'">
+      <pre>{{message}}</pre>
       <pre>{{result}}</pre>
-    </div>
-    <div class="invalid-query-view" v-else-if="activeView==='invalid'">
-      <pre>Invalid Query</pre>
     </div>
   </div>
 </template>
@@ -39,24 +32,34 @@
     data () {
       return {
         result: this.$store.state.queryResult,
+        statusCode: this.$store.state.queryStatusCode,
+        message: '',
         requiredFields: ['paon', 'street', 'town', 'county', 'propertyType', 'postcode', 'amount', 'date'],
         activeView: 'data'
       }
     },
     mounted () {
       console.log(JSON.stringify(this.result))
-      if (this.result.length === 0) {
-        this.activeView = 'invalid'
-        return
-      }
       const mVue = this
-      var hasAllRequiredFields = this.requiredFields.every(function (field) {
-        return mVue.result[0].hasOwnProperty(field)
-      })
-      if (!hasAllRequiredFields) {
-        this.activeView = 'result'
+      if (this.statusCode > 399) {
+        this.message = ''
+        this.activeView = 'json'
+        return
+      } else if (this.result.length === 0) {
+        this.message = `No sales in ${this.postcode} since 01/01/1995`
+        this.activeView = 'json'
       } else {
-        this.visualizeData()
+        var hasAllRequiredFields = this.requiredFields.every(function (field) {
+          return mVue.result[0].hasOwnProperty(field)
+        })
+        if (!hasAllRequiredFields) {
+          this.message = 'To visualize the data please return all of the following fields:\n' +
+                         'paon, street, town, county, propertyType, postcode, amount, date\n\n' +
+                         'Query Result as JSON:'
+          this.activeView = 'json'
+        } else {
+          this.visualizeData()
+        }
       }
     },
     methods: {
@@ -166,13 +169,12 @@
             return d.propertyType
           })
           .html(function (d) {
-            console.log(`String Locale: ${d.date.toLocaleString()}`)
-            const html = `<div><u>Address:</u> ${d.paon} ${d.street}</div>` +
-              `<div><u>Town:</u> ${d.town}</div>` +
-              `<div><u>County:</u> ${d.county}</div>` +
-              `<div><u>Property Type:</u> ${d.propertyType}</div>` +
-              `<div><u>Price Paid:</u> ${d.amount.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })}</div>` +
-              `<div><u>Date:</u> ${d.date.getDate()}/${d.date.getMonth() + 1}/${d.date.getFullYear()}</div>`
+            const html = `<div><b>Address:</b> ${d.paon} ${d.street}</div>` +
+              `<div><b>Town:</b> ${d.town}</div>` +
+              `<div><b>County:</b> ${d.county}</div>` +
+              `<div><b>Property Type:</b> ${d.propertyType}</div>` +
+              `<div><b>Price Paid:</b> ${d.amount.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })}</div>` +
+              `<div><b>Date:</b> ${d.date.getDate()}/${d.date.getMonth() + 1}/${d.date.getFullYear()}</div>`
             return html
           })
           .sortBy(function (d) {
@@ -184,6 +186,14 @@
       }
     },
     computed: {
+      postcode: {
+        get: function () {
+          return this.$store.state.postcode
+        },
+        set: function (newPostcode) {
+          this.$store.commit('updatePostcode', newPostcode)
+        }
+      },
       updatedResult () {
         this.$store.state.queryResult
       }
