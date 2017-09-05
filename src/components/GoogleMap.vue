@@ -75,7 +75,7 @@ export default {
     },
     populateURLs: function () {
       this.visiblePostcodes.forEach((postcode) => {
-        var url = `http://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
+        var url = `//landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
         url = url.replace(` `, `%20`)
         postcode.properties.url = url
       })
