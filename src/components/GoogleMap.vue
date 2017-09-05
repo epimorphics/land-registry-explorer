@@ -34,7 +34,7 @@ export default {
       maxZoom: 18
     }
     const map = new window.google.maps.Map(element, options)
-
+    // Map on idle listener updates the data layer
     map.addListener('idle', function () {
       if (!mVue.populatingData) {
         mVue.mapCenter = map.getCenter()
@@ -44,25 +44,22 @@ export default {
     mVue.map = map
   },
   methods: {
+    // Updates the map center to match the given postcode centroid
     updateMapCenter: function () {
+      if (this.postcode.length < 7) return
       const url = `https://api.postcodes.io/postcodes/${this.postcode}`
-      console.log(`Centroid URL: ${url}`)
       return axios.get(url).then((response) => {
-        const latitude = response.data.result.latitude
-        const longitude = response.data.result.longitude
-        this.mapCenter = new window.google.maps.LatLng(latitude, longitude)
-        // console.log(`updateMapCenter: ${JSON.stringify(this.mapCenter)}`)
+        this.mapCenter = new window.google.maps.LatLng(response.data.result.latitude, response.data.result.longitude)
       }).catch((error) => {
-        console.log(`Error: ${error}`)
+        console.log(error)
       })
     },
+    // Updates a list of visible postcodes with geoJSON points representing postcode centroids which are returned from the API call
     getNearbyPostcodes: function () {
       this.visiblePostcodes = []
       const url = `https://api.postcodes.io/postcodes?lon=${this.mapCenter.lng()}&lat=${this.mapCenter.lat()}&radius=300&limit=99`
-      console.log(`Nearby URL: ${url}`)
       axios.get(url).then((response) => {
-        const results = response.data.result
-        results.forEach((result) => {
+        response.data.result.forEach((result) => {
           var postcode = turfHelpers.point([result.longitude, result.latitude])
           postcode.id = result.postcode
           this.visiblePostcodes.push(postcode)
@@ -70,37 +67,34 @@ export default {
       }).then(() => {
         this.populateURLs()
       }).catch((error) => {
-        console.log(`Error: ${error}`)
+        console.log(error)
       })
     },
+    // Loops through visiblePostcodes and generates an url for querying the land registry api
     populateURLs: function () {
       this.visiblePostcodes.forEach((postcode) => {
-        var url = `//landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
+        var url = `http://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&propertyAddress.postcode=${postcode.id}&_pageSize=50`
         url = url.replace(` `, `%20`)
         postcode.properties.url = url
       })
       this.getData()
     },
+    // Runs an API call for all visible postcodes and calculates the average price paid
     getData: function () {
       Promise.map(this.visiblePostcodes, postcode => axios.get(postcode.properties.url).then((response) => {
-        // console.log(postcode.properties.url)
         var totalPaid = 0
         const data = response.data.result.items
         data.forEach((transaction) => {
           totalPaid += transaction.pricePaid
         })
-        if (totalPaid === 0) {
-          postcode.properties.averagePaid = 0
-        } else {
-          postcode.properties.averagePaid = totalPaid / data.length
-        }
+        postcode.properties.averagePaid = (totalPaid) ? totalPaid / data.length : 0
       }).catch((error) => {
         console.log(error)
       }), { concurrency: 10 }).then(() => {
-        // console.log(`getData: ${JSON.stringify(this.visiblePostcodes)}`)
         this.generateVoronoi()
       })
     },
+    // Given a set of postcode centroids it creates a set of approximated postcode boundaries using a voronoi algorithm
     generateVoronoi: function () {
       var centroids = []
       this.visiblePostcodes.forEach((postcode) => {
@@ -113,10 +107,10 @@ export default {
       const minX = this.map.getBounds().getSouthWest().lng() - 0.005
 
       let voronoi = d3voronoi.voronoi().extent([[minX, minY], [maxX, maxY]])
-      let polygons = voronoi(centroids).polygons()
+      let voronoiPolygons = voronoi(centroids).polygons()
 
       var postcodePolygons = []
-      polygons.forEach((polygon) => {
+      voronoiPolygons.forEach((polygon) => {
         // Reverse coordinate order so it conforms to the right-hand rule.
         // Close the ring by making the last position the same as the first.
         polygon.reverse().push(polygon[0])
@@ -132,15 +126,16 @@ export default {
       })
       this.clearShapes()
       this.visiblePostcodes = postcodePolygons
-      // console.log(`generateVoronoi: ${JSON.stringify(this.visiblePostcodes)}`)
       this.populateData()
     },
+    // Removes all the features from the map data layer
     clearShapes: function () {
       this.map.data.forEach((feature) => {
         this.map.data.remove(feature)
       })
       this.visiblePostcodes = []
     },
+    // TODO: Carry on from here
     populateData: function () {
       var min = Infinity
       var max = -Infinity

@@ -14,7 +14,7 @@
         <SparqlConsole id="console" v-on:runQuery="runQuery"></SparqlConsole>
       </div>
       <div v-else>
-        <ResultView id="result">Results can be interesting</ResultView>
+        <ResultView id="result"></ResultView>
       </div>
     </div>
     <md-bottom-bar>
@@ -27,7 +27,6 @@
 
 <script>
   const axios = require('axios')
-  // const d3 = require('d3-sparql')
 
   import GoogleMap from '@/components/GoogleMap'
   import SparqlConsole from '@/components/SparqlConsole'
@@ -37,8 +36,7 @@
     name: 'app',
     data () {
       return {
-        currentView: 'map',
-        endpoint: 'http://landregistry.data.gov.uk/landregistry/query'
+        currentView: 'map'
       }
     },
     components: {
@@ -47,24 +45,21 @@
       ResultView
     },
     methods: {
+      // Opens the result tab by clicking on the bottom menu item
       openResult: function () {
         const resultButton = document.getElementById('result-button')
         resultButton.click()
       },
-      setCurrentViewResult: function () {
-        console.log(this.$refs)
-        this.$refs.sparqlconsole.runQuery()
-      },
+      // Runs the query found in sparql console and updates Vuex state of the response code and the response itself
       runQuery: function () {
         const mVue = this
-        const url = mVue.endpoint + '?query=' + encodeURIComponent(mVue.code)
+        const url = `http://landregistry.data.gov.uk/landregistry/query?query=${encodeURIComponent(mVue.code)}`
         axios.get(url, {
           headers: {
             'Accept': 'application/sparql-results+json'
           }
         }).then(function (response) {
           const data = mVue.parseQueryResult(response.data.results.bindings)
-          // console.log(`RESPONSE: ${JSON.stringify(result)}`)
           mVue.$store.commit('updateQueryStatusCode', response.status)
           mVue.$store.commit('updateQueryResult', data)
         }).catch((error) => {
@@ -73,37 +68,19 @@
             mVue.$store.commit('updateQueryResult', error.response.data)
           }
         })
-        // d3.sparql(this.endpoint, this.code, function (error, data) {
-        //   if (error) throw error
-        //   console.log(JSON.stringify(data))
-        //   mVue.$store.commit('updateQueryResult', data)
-        // })
       },
-      parseQueryResult: function (input) {
+      // Strips down sparql query result to a simple json form
+      parseQueryResult: function (result) {
         const mVue = this
-        return input.map(function (row) {
+        return result.map(function (row) {
           var rowObject = {}
           Object.keys(row).forEach(function (column) {
             rowObject[column] = mVue.dataTypeCast(row[column])
           })
-          // console.log(JSON.stringify(rowObject))
           return rowObject
         })
-
-        // const mVue = this
-        // // console.log(`parseQueryResult, input: ${JSON.stringify(input)}`)
-        // var results = []
-        // input.forEach(function (element) {
-        //   var result = {}
-        //   element.forEach(function (field) {
-        //     var parsedField = {}
-        //     parsedField[field.key] = mVue.dataTypeCast(field)
-        //   })
-        //   console.log(`single item: ${JSON.stringify(element)}`)
-        //   result.push(item)
-        // })
-        // return result
       },
+      // Casts an object value into a corresponding data type found in the object properties
       dataTypeCast: function (obj) {
         const xmlSchema = 'http://www.w3.org/2001/XMLSchema#'
         var value = obj.value
@@ -166,6 +143,7 @@
       }
     },
     watch: {
+      // As soon as the state of queryResult is updated open the results view
       queryResult: function () {
         this.currentView = 'result'
       }
@@ -182,7 +160,6 @@
   text-align: center;
   color: #2c3e50;
   margin: auto;
-  margin-top: 60px;
   width: 550px;
   height: 600px;
   box-shadow: 1px 2px 2px 0px rgba(0,0,0,0.11);
