@@ -148,7 +148,7 @@ export default {
     },
     // Colors the polygons based on the average price paid
     setPolygonsColor: function (min, max) {
-      const bezInterpolator = chroma.scale(['#fff0a9', '#e69735', '#682a0f'])
+      const bezInterpolator = chroma.scale(['#E8FF3C', '#FF4500', '#D90000'])
       this.map.data.setStyle((feature) => {
         const avgPaid = feature.getProperty('averagePaid')
         var colorIndex = (avgPaid - min) / (max - min)
