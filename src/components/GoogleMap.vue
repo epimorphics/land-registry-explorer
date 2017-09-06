@@ -4,8 +4,8 @@
 
 <script>
 const chroma = require('chroma-js')
+const turf = require('@turf/helpers')
 const turfInside = require('@turf/inside')
-const turfHelpers = require('@turf/helpers')
 const d3voronoi = require('d3-voronoi')
 const axios = require('axios')
 const Promise = require('bluebird')
@@ -46,7 +46,7 @@ export default {
   methods: {
     // Updates the map center to match the given postcode centroid
     updateMapCenter: function () {
-      if (this.postcode.length < 7) return
+      if (this.postcode.length < 6) return
       const url = `https://api.postcodes.io/postcodes/${this.postcode}`
       return axios.get(url).then((response) => {
         this.mapCenter = new window.google.maps.LatLng(response.data.result.latitude, response.data.result.longitude)
@@ -60,7 +60,7 @@ export default {
       const url = `https://api.postcodes.io/postcodes?lon=${this.mapCenter.lng()}&lat=${this.mapCenter.lat()}&radius=300&limit=99`
       axios.get(url).then((response) => {
         response.data.result.forEach((result) => {
-          var postcode = turfHelpers.point([result.longitude, result.latitude])
+          var postcode = turf.point([result.longitude, result.latitude])
           postcode.id = result.postcode
           this.visiblePostcodes.push(postcode)
         })
@@ -114,7 +114,7 @@ export default {
         // Reverse coordinate order so it conforms to the right-hand rule.
         // Close the ring by making the last position the same as the first.
         polygon.reverse().push(polygon[0])
-        var postcodePolygon = turfHelpers.polygon([polygon])
+        var postcodePolygon = turf.polygon([polygon])
         this.visiblePostcodes.forEach((postcodePoint) => {
           if (turfInside(postcodePoint, postcodePolygon)) {
             postcodePolygon.id = postcodePoint.id
@@ -135,7 +135,7 @@ export default {
       })
       this.visiblePostcodes = []
     },
-    // TODO: Carry on from here
+    // Populates the map data layer with the visiblePostcode polygons
     populateData: function () {
       var min = Infinity
       var max = -Infinity
@@ -144,29 +144,31 @@ export default {
         if (postcode.properties.averagePaid > max) max = postcode.properties.averagePaid
         if (postcode.properties.averagePaid < min) min = postcode.properties.averagePaid
       })
-
+      this.setPolygonsColor(min, max)
+    },
+    // Colors the polygons based on the average price paid
+    setPolygonsColor: function (min, max) {
       const bezInterpolator = chroma.scale(['#fff0a9', '#e69735', '#682a0f'])
       this.map.data.setStyle((feature) => {
         const avgPaid = feature.getProperty('averagePaid')
         var colorIndex = (avgPaid - min) / (max - min)
-        var color
-        if (avgPaid === 0) {
-          color = '#ffffff'
-        } else {
-          color = bezInterpolator(colorIndex)
-        }
+        var color = (avgPaid) ? bezInterpolator(colorIndex) : '#ffffff'
         return {
           fillColor: color,
           strokeWeight: 1
         }
       })
+      this.setOnFeatureClickListener()
+    },
+    // Sets a map data on click listener to open an info window
+    setOnFeatureClickListener: function () {
       const mVue = this
       this.map.data.addListener('click', function (event) {
         if (mVue.infoWindow) {
           mVue.infoWindow.close()
         }
         const centroid = event.feature.getProperty('centroid')
-        const averagePricePaid = event.feature.getProperty('averagePaid').toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })
+        const averagePricePaid = mVue.prettyPrintCurrency(event.feature.getProperty('averagePaid'))
         const message = `<p><b>${event.feature.getId()}</b></p>` +
                         `<p>Average Price Paid: ${averagePricePaid}</p>`
         mVue.infoWindow = new window.google.maps.InfoWindow({
@@ -177,6 +179,10 @@ export default {
         mVue.infoWindow.open(mVue.map)
       })
       this.populatingData = false
+    },
+    // Converts a number into a currency string
+    prettyPrintCurrency: function (amount) {
+      return amount.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 })
     }
   },
   computed: {
@@ -190,11 +196,13 @@ export default {
     }
   },
   watch: {
+    // When mapCenter is updated set the map camera to the new location
     mapCenter: function () {
       this.map.panTo(this.mapCenter)
     },
+    // If the updated postcode is of at least the mimimum postcode length update the data layer
     postcode: function (newPostcode) {
-      if (newPostcode.length === 7) {
+      if (newPostcode.length > 5) {
         this.populatingData = true
         this.updateMapCenter().then(() => {
           this.getNearbyPostcodes()

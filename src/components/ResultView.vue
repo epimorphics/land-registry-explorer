@@ -39,7 +39,6 @@
       }
     },
     mounted () {
-      console.log(JSON.stringify(this.result))
       const mVue = this
       if (this.statusCode > 399) {
         this.message = ''
@@ -63,6 +62,8 @@
       }
     },
     methods: {
+      // Visualises the data using dc.js and crossfilter
+      // See: https://dc-js.github.io/dc.js/
       visualizeData: function () {
         var rowChart = dc.rowChart('#rowChart')
         var barChart = dc.barChart('#barChart')
@@ -193,15 +194,6 @@
         set: function (newPostcode) {
           this.$store.commit('updatePostcode', newPostcode)
         }
-      },
-      updatedResult () {
-        this.$store.state.queryResult
-      }
-    },
-    watch: {
-      updatedResult: function (newResult) {
-        this.result = newResult
-        dc.redrawAll()
       }
     }
   }

@@ -1,6 +1,5 @@
 <template>
   <div class="sparql-console">
-    <!-- codemirror -->
     <codemirror id="codemirror"
                 v-model="code" 
                 :options="editorOption"
@@ -34,10 +33,12 @@
       }
     },
     methods: {
+      // Prforms a click on a result button in bottom navigation
       runQuery: function () {
         const resultButton = document.getElementById('result-button')
         resultButton.click()
       },
+      // Returns the string index given a line and character number
       getIndexAt: function (string, line, char) {
         var currentLine = 0
         for (var x = 0; x < string.length; x++) {
@@ -50,43 +51,44 @@
           }
         }
       },
+      // Cancels every selection made in the code by forcing the head to equal the anchor
       onEditorBeforeSelectionChange: function (codemirror, changeObject) {
         const ranges = JSON.parse(JSON.stringify(changeObject.ranges))
         ranges[0].head = JSON.parse(JSON.stringify(changeObject.ranges[0].anchor))
         changeObject.update(ranges)
       },
+      // Cancels every change that is not a single character input or delete or an external value update
       onEditorBeforeChange: function (codemirror, changeObject) {
         if (changeObject.origin !== '+delete' && changeObject.origin !== '+input' && changeObject.origin !== 'setValue') {
           changeObject.cancel()
         }
       },
+      // Updates queryPrefix, queryPostfix or postcode based on the changes user makes inside the console
       onEditorChanges: function (codemirror, changeObjects) {
         const newEditorState = codemirror.getValue()
         const postcodeStartIndex = this.queryPrefix.length
         const postcodeEndIndex = postcodeStartIndex + this.postcode.length
         for (var i = 0; i < changeObjects.length; i++) {
           const changeObject = changeObjects[i]
+          const changedCharIndex = this.getIndexAt(codemirror.getValue(), changeObject.from.line, changeObject.from.ch)
           if (changeObject.origin === '+delete') {
-            const deletedCharIndex = this.getIndexAt(codemirror.getValue(), changeObject.from.line, changeObject.from.ch)
-            if (deletedCharIndex < postcodeStartIndex) { // Change in query prefix
+            if (changedCharIndex < postcodeStartIndex) { // Change in query prefix
               this.queryPrefix = newEditorState.substring(0, postcodeStartIndex - 1)
-            } else if (deletedCharIndex < postcodeEndIndex) { // Change in the postcode
+            } else if (changedCharIndex < postcodeEndIndex) { // Change in the postcode
               this.postcode = newEditorState.substring(postcodeStartIndex, postcodeEndIndex - 1)
             } else { // Change in query postfix
               this.queryPostfix = newEditorState.substring(postcodeEndIndex, newEditorState.length)
             }
           } else if (changeObject.origin === '+input') {
-            const newCharIndex = this.getIndexAt(codemirror.getValue(), changeObject.from.line, changeObject.from.ch)
-            if (newCharIndex < postcodeStartIndex) { // Change in query prefix
+            if (changedCharIndex < postcodeStartIndex) { // Change in query prefix
               this.queryPrefix = newEditorState.substring(0, postcodeStartIndex + 1)
-            } else if (newCharIndex <= postcodeEndIndex) { // Change in the postcode
+            } else if (changedCharIndex <= postcodeEndIndex) { // Change in the postcode
               this.postcode = newEditorState.substring(postcodeStartIndex, postcodeEndIndex + 1)
             } else { // Change in query postfix
               this.queryPostfix = newEditorState.substring(postcodeEndIndex, newEditorState.length)
             }
           }
         }
-        console.log(this.code === newEditorState)
       }
     },
     computed: {
